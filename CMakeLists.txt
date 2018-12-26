@@ -43,7 +43,7 @@ MESSAGE("OpenSSL Includes Path:    ${OPENSSL_INCLUDE_DIR}")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/rest)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/rest/support)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/support)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OPENSSL_INCLUDE_DIR})
 
