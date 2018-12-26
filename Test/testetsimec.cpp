@@ -4,9 +4,9 @@
 #include "EtsiMec/appcontextmanager.h"
 #include "EtsiMec/staticfileueapplcmproxy.h"
 #include "EtsiMec/staticueapplcmproxy.h"
+#include "EtsiMec/trivialueapplcmproxy.h"
 #include "Rest/client.h"
 #include "Support/wait.h"
-#include "Test/trivialueapplcmproxy.h"
 
 #include <glog/logging.h>
 
@@ -20,17 +20,15 @@ namespace etsimec {
 
 struct TestEtsiMec : public ::testing::Test {
   TestEtsiMec()
-      : theProxyUri("http://localhost:10000")
-      , theInputFile("to_remove/staticfile.txt") {
+      : theProxyUri("http://localhost:10000"),
+        theInputFile("to_remove/staticfile.txt") {
     boost::filesystem::remove_all("to_remove");
     boost::filesystem::create_directories("to_remove");
   }
 
-  ~TestEtsiMec() {
-    boost::filesystem::remove_all("to_remove");
-  }
+  ~TestEtsiMec() { boost::filesystem::remove_all("to_remove"); }
 
-  void countEq(rest::Client& aClient, const size_t aExpected) {
+  void countEq(rest::Client &aClient, const size_t aExpected) {
     const auto myRet = aClient.get("/app_list");
     ASSERT_EQ(web::http::status_codes::OK, myRet.first);
     ASSERT_TRUE(myRet.second.has_object_field("ApplicationList"));
@@ -45,10 +43,10 @@ struct TestEtsiMec : public ::testing::Test {
 };
 
 TEST_F(TestEtsiMec, test_appcontext) {
-  const AppInfo myInfoRequest(
-      "my-app", "my-provider", "v1.0", "", "package-source");
-  const AppInfo myInfoResponse(
-      "my-app", "my-provider", "v1.0", "", "ref-uri", "package-source");
+  const AppInfo myInfoRequest("my-app", "my-provider", "v1.0", "",
+                              "package-source");
+  const AppInfo myInfoResponse("my-app", "my-provider", "v1.0", "", "ref-uri",
+                               "package-source");
   const AppInfo myInfoWrong("my-app", "my-provider", "v1.0", "", AppCharcs());
 
   // check type
@@ -138,8 +136,7 @@ TEST_F(TestEtsiMec, test_ueapplcmproxy_appcontext) {
                         myProxy.apiVersion());
 
   // create a new context
-  AppContext myContext("unique-id",
-                       "callback-ref",
+  AppContext myContext("unique-id", "callback-ref",
                        AppInfo("my-app", "my-provider", "v1.0", "", "package"));
   const auto ret = myClient.post(myContext.toJson(), "/app_contexts");
   ASSERT_EQ(web::http::status_codes::Created, ret.first);
@@ -177,7 +174,7 @@ TEST_F(TestEtsiMec, test_ueapplcmproxy_appcontext) {
 }
 
 TEST_F(TestEtsiMec, test_appcontextmanager) {
-  const std::string    myNotificationUri = "http://localhost:10001";
+  const std::string myNotificationUri = "http://localhost:10001";
   TrivialUeAppLcmProxy myProxy(theProxyUri);
   myProxy.start();
   AppContextManager myAppContextManager(myNotificationUri, theProxyUri);
@@ -185,7 +182,7 @@ TEST_F(TestEtsiMec, test_appcontextmanager) {
 
   // create some contexts
   for (auto i = 1; i <= 5; i++) {
-    AppInfo    myAppInfo("name", "provider", "1.0.0", "example app", "");
+    AppInfo myAppInfo("name", "provider", "1.0.0", "example app", "");
     const auto myRefUri = myAppContextManager.contextCreate(myAppInfo).second;
     ASSERT_EQ("reference-uri-" + std::to_string(i), myRefUri);
   }
@@ -203,7 +200,7 @@ TEST_F(TestEtsiMec, test_appcontextmanager) {
 }
 
 TEST_F(TestEtsiMec, test_appcontextmanager_staticueapplcmproxy) {
-  const std::string   myNotificationUri = "http://localhost:10001";
+  const std::string myNotificationUri = "http://localhost:10001";
   StaticUeAppLcmProxy myProxy(theProxyUri);
   myProxy.start();
   AppContextManager myAppContextManager(myNotificationUri, theProxyUri);
@@ -229,7 +226,7 @@ TEST_F(TestEtsiMec, test_appcontextmanager_staticueapplcmproxy) {
   myProxy.defaultEdgeRouter("default");
 
   // now the context is created with success, with referenceURI == default
-  std::map<std::string, AppContextManager*> myAppUeIDs;
+  std::map<std::string, AppContextManager *> myAppUeIDs;
   const auto ret = myAppContextManager.contextCreate(myAppInfo);
   ASSERT_EQ("default", ret.second);
   ASSERT_EQ("default", myAppContextManager.referenceUri(ret.first));
@@ -242,12 +239,11 @@ TEST_F(TestEtsiMec, test_appcontextmanager_staticueapplcmproxy) {
   // a notification should arrive to the app context manager
   ASSERT_TRUE(support::waitFor<std::string>(
       [&]() { return myAppContextManager.referenceUri(ret.first); },
-      "another-default",
-      1));
+      "another-default", 1));
 
   // create a few more new contexts from another app context manager
   const std::string myNotificationUri2 = "http://localhost:10002";
-  auto              myAnotherAppContextManager =
+  auto myAnotherAppContextManager =
       std::make_unique<AppContextManager>(myNotificationUri2, theProxyUri);
   myAnotherAppContextManager->start();
 
@@ -265,7 +261,7 @@ TEST_F(TestEtsiMec, test_appcontextmanager_staticueapplcmproxy) {
 
   // nothing should have changed
   std::this_thread::sleep_for(std::chrono::seconds(1));
-  for (const auto& elem : myAppUeIDs) {
+  for (const auto &elem : myAppUeIDs) {
     assert(elem.second != nullptr);
     ASSERT_EQ("another-default", elem.second->referenceUri(elem.first));
   }
@@ -274,9 +270,9 @@ TEST_F(TestEtsiMec, test_appcontextmanager_staticueapplcmproxy) {
   myProxy.associateAddress("::1", "moon");
 
   // the edge router should be update for all
-  const auto myCheckAll = [&](const std::string& aExpected) {
+  const auto myCheckAll = [&](const std::string &aExpected) {
     auto myAsExpected = true;
-    for (const auto& elem : myAppUeIDs) {
+    for (const auto &elem : myAppUeIDs) {
       assert(elem.second != nullptr);
       myAsExpected &= elem.second->referenceUri(elem.first) == aExpected;
     }
@@ -306,8 +302,8 @@ TEST_F(TestEtsiMec, test_appcontextmanager_staticueapplcmproxy) {
   myAnotherAppContextManager.reset();
 
   // deleting the context manager also forces the contexts to be removed
-  ASSERT_TRUE(support::waitFor<size_t>(
-      [&]() { return myProxy.numContexts(); }, 1, 1.0));
+  ASSERT_TRUE(support::waitFor<size_t>([&]() { return myProxy.numContexts(); },
+                                       1, 1.0));
 }
 
 TEST_F(TestEtsiMec, test_staticfileueapplcmproxy) {
