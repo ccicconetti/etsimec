@@ -14,7 +14,6 @@ add_library(uiiitetsimec SHARED
 )
 
 target_link_libraries(uiiitetsimec
-  uiiitedge
   uiiitrest
   uiiitsupport
   ${GLOG}
