@@ -1,14 +1,12 @@
 #include "gtest/gtest.h"
 
-#include "Edge/edgecontrollermessages.h"
 #include "EtsiMec/appcontext.h"
 #include "EtsiMec/appcontextmanager.h"
-#include "EtsiMec/edgecontrolleretsi.h"
 #include "EtsiMec/staticfileueapplcmproxy.h"
 #include "EtsiMec/staticueapplcmproxy.h"
-#include "EtsiMec/ueapplcmproxy.h"
 #include "Rest/client.h"
 #include "Support/wait.h"
+#include "Test/trivialueapplcmproxy.h"
 
 #include <glog/logging.h>
 
@@ -19,43 +17,6 @@
 
 namespace uiiit {
 namespace etsimec {
-
-struct TrivialUeAppLcmProxy final : public UeAppLcmProxy {
-  TrivialUeAppLcmProxy(const std::string& aApiRoot)
-      : UeAppLcmProxy(aApiRoot)
-      , theClientAddress()
-      , theUpdated(0)
-      , theContextCounter(0)
-      , theContextId()
-      , theValidRequest(true) {
-  }
-
-  AppContext createContext(const std::string& aClientAddress,
-                           const AppContext&  aRequest) override {
-    if (theValidRequest) {
-      theClientAddress = aClientAddress;
-      theContextCounter++;
-      return aRequest.makeResponse(
-          "context-id-" + std::to_string(theContextCounter),
-          "reference-uri-" + std::to_string(theContextCounter));
-    }
-    return aRequest;
-  }
-  bool updateContext(const AppContext& aRequest) override {
-    theUpdated++;
-    return theValidRequest;
-  }
-  bool deleteContext(const std::string& aContextId) override {
-    theContextId = aContextId;
-    return theValidRequest;
-  }
-
-  std::string theClientAddress;
-  size_t      theUpdated;
-  size_t      theContextCounter;
-  std::string theContextId;
-  bool        theValidRequest;
-};
 
 struct TestEtsiMec : public ::testing::Test {
   TestEtsiMec()
@@ -213,43 +174,6 @@ TEST_F(TestEtsiMec, test_ueapplcmproxy_appcontext) {
   ASSERT_EQ(web::http::status_codes::Forbidden,
             myClient.del("/app_contexts/xxx"));
   ASSERT_EQ("xxx", myProxy.theContextId);
-}
-
-TEST_F(TestEtsiMec, test_edgecontrolleretsi) {
-  TrivialUeAppLcmProxy myProxy(theProxyUri);
-  myProxy.start();
-
-  // bind LCM proxy to the edge controller
-  EdgeControllerEtsi myEdgeControllerEtsi(myProxy);
-
-  rest::Client myClient(theProxyUri + "/" + myProxy.apiName() + "/" +
-                        myProxy.apiVersion());
-  countEq(myClient, 0);
-
-  // create some containers
-  using ContainerList = uiiit::edge::ContainerList;
-  ContainerList myContainer1{
-      {{ContainerList::Container{"cont0", "cpu0", std::string("lambda0"), 2}}},
-  };
-  ContainerList myContainer2{
-      {{ContainerList::Container{"cont0", "cpu0", std::string("lambda0"), 2}},
-       {ContainerList::Container{"cont1", "cpu0", std::string("lambda1"), 2}},
-       {ContainerList::Container{"cont2", "cpu0", std::string("lambda2"), 2}}},
-  };
-
-  // publish some lamdbas using the controller
-  myEdgeControllerEtsi.announceComputer("host0:6473", myContainer1);
-  countEq(myClient, 1);
-
-  myEdgeControllerEtsi.announceComputer("host1:6473", myContainer2);
-  countEq(myClient, 3);
-
-  // check that they appear/disappear as needed
-  myEdgeControllerEtsi.removeComputer("host1:6473");
-  countEq(myClient, 1);
-
-  myEdgeControllerEtsi.removeComputer("host0:6473");
-  countEq(myClient, 0);
 }
 
 TEST_F(TestEtsiMec, test_appcontextmanager) {
