@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package uiiit.etsimec.rpc;
+
+service UeAppLcmProxy {
+  rpc associateAddress  (AddressTuple) returns (Void)   {}
+  rpc defaultEdgeRouter (AddressTuple) returns (Void)   {}
+  rpc removeAddress     (AddressTuple) returns (Void)   {}
+  rpc numContexts       (Void)         returns (Number) {}
+  rpc table             (Void)         returns (Table)  {}
+}
+
+message AddressTuple {
+  // address of the edge client, not present in defaultEdgeRouter()
+  string client = 1;
+  // address of the edge router, not present in removeAddress()
+  string server = 2;
+}
+
+message Number {
+  uint32 value = 1;
+}
+
+message Table {
+  // map of edge client -> router addresses
+  map<string, string> values = 1;
+}
+
+message Void {
+}
