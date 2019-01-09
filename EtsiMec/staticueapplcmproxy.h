@@ -89,6 +89,10 @@ class StaticUeAppLcmProxy : public UeAppLcmProxy
   //! \return the number of active application contexts.
   size_t numContexts() const;
 
+  //! \return the address associations table (requires deep copy of the map).
+  std::unordered_map<std::string, std::string>
+  addressAssociations() const;
+
  protected:
   AppContext createContext(const std::string& aClientAddress,
                            const AppContext&  aRequest) override;

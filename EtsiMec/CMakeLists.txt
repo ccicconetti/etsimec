@@ -15,6 +15,7 @@ add_library(uiiitetsimec SHARED
   ${CMAKE_CURRENT_SOURCE_DIR}/applicationlist.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/applistclient.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/etsimecoptions.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/grpcueapplcmproxy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/notificationevent.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/staticfileueapplcmproxy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/staticueapplcmproxy.cpp

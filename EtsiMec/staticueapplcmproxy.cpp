@@ -147,6 +147,12 @@ size_t StaticUeAppLcmProxy::numContexts() const {
   return theApplicationsByContextId.size();
 }
 
+  std::unordered_map<std::string, std::string>
+  StaticUeAppLcmProxy::addressAssociations() const {
+  const std::lock_guard<std::mutex> myLock(theMutex);
+  return theAddressAssociations;
+  }
+
 AppContext StaticUeAppLcmProxy::createContext(const std::string& aClientAddress,
                                               const AppContext&  aRequest) {
   const std::lock_guard<std::mutex> myLock(theMutex);
