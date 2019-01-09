@@ -77,10 +77,19 @@ class StaticUeAppLcmProxy : public UeAppLcmProxy
   //! Set the default edge router. Clear if the passed string is empty.
   void defaultEdgeRouter(const std::string& aEdgeRouter);
 
-  //! Change the association between client and edge router addresses.
+  /**
+   * Change the association between client and edge router addresses.
+   *
+   * \throw std::runtime_error if aAddress or aEdgeRouter is empty.
+   */
   void associateAddress(const std::string& aAddress,
                         const std::string& aEdgeRouter);
-  //! Remove the association of a client from an edge router.
+
+  /**
+   * Remove the association of a client from an edge router.
+   * 
+   * \throw std::runtime_error if aAddress is empty.
+   */
   void removeAddress(const std::string& aAddress);
 
   //! \return the number of static addresses registered.
@@ -89,9 +98,11 @@ class StaticUeAppLcmProxy : public UeAppLcmProxy
   //! \return the number of active application contexts.
   size_t numContexts() const;
 
+  //! \return the current default edge router, if set.
+  std::string defaultEdgeRouter() const;
+
   //! \return the address associations table (requires deep copy of the map).
-  std::unordered_map<std::string, std::string>
-  addressAssociations() const;
+  std::unordered_map<std::string, std::string> addressAssociations() const;
 
  protected:
   AppContext createContext(const std::string& aClientAddress,

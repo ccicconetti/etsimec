@@ -78,6 +78,13 @@ void StaticUeAppLcmProxy::defaultEdgeRouter(const std::string& aEdgeRouter) {
 
 void StaticUeAppLcmProxy::associateAddress(const std::string& aAddress,
                                            const std::string& aEdgeRouter) {
+  if (aAddress.empty()) {
+    throw std::runtime_error("Empty edge client address");
+  }
+  if (aEdgeRouter.empty()) {
+    throw std::runtime_error("Empty edge router address");
+  }
+
   std::unique_lock<std::mutex> myLock(theMutex);
   auto it = theAddressAssociations.emplace(aAddress, aEdgeRouter);
   if (not it.second and aEdgeRouter == it.first->second) {
@@ -106,6 +113,10 @@ void StaticUeAppLcmProxy::associateAddress(const std::string& aAddress,
 }
 
 void StaticUeAppLcmProxy::removeAddress(const std::string& aAddress) {
+  if (aAddress.empty()) {
+    throw std::runtime_error("Empty edge client address");
+  }
+
   std::unique_lock<std::mutex> myLock(theMutex);
   const auto                   it = theAddressAssociations.find(aAddress);
   if (it != theAddressAssociations.end()) {
@@ -147,11 +158,16 @@ size_t StaticUeAppLcmProxy::numContexts() const {
   return theApplicationsByContextId.size();
 }
 
-  std::unordered_map<std::string, std::string>
-  StaticUeAppLcmProxy::addressAssociations() const {
+std::string StaticUeAppLcmProxy::defaultEdgeRouter() const {
+  const std::lock_guard<std::mutex> myLock(theMutex);
+  return theDefaultEdgeRouter;
+}
+
+std::unordered_map<std::string, std::string>
+StaticUeAppLcmProxy::addressAssociations() const {
   const std::lock_guard<std::mutex> myLock(theMutex);
   return theAddressAssociations;
-  }
+}
 
 AppContext StaticUeAppLcmProxy::createContext(const std::string& aClientAddress,
                                               const AppContext&  aRequest) {
