@@ -30,6 +30,7 @@ SOFTWARE.
 #include "gtest/gtest.h"
 
 #include "EtsiMec/grpcueapplcmproxy.h"
+#include "EtsiMec/grpcueapplcmproxyclient.h"
 #include "EtsiMec/staticueapplcmproxy.h"
 
 #include <glog/logging.h>
@@ -54,9 +55,87 @@ TEST_F(TestGrpcUeAppLcmProxy, test_ctor) {
 
 TEST_F(TestGrpcUeAppLcmProxy, test_client_server) {
   StaticUeAppLcmProxy myProxy(theProxyUri);
-  GrpcUeAppLcmProxy   myGrpc(theEndpoint, myProxy);
+  GrpcUeAppLcmProxy   myServer(theEndpoint, myProxy);
   myProxy.start();
-  myGrpc.run(false); // non-blocking
+  myServer.run(false); // non-blocking
+  GrpcUeAppLcmProxyClient myClient(theEndpoint);
+
+  // check initial conditions
+  ASSERT_EQ(0u, myClient.numContexts());
+  ASSERT_TRUE(myClient.defaultEdgeRouter().empty());
+  ASSERT_EQ((std::unordered_map<std::string, std::string>()), myClient.table());
+
+  // add a few routes
+  for (auto i = 0; i < 5; i++) {
+    myClient.associateAddress("10.0.0." + std::to_string(i), "1.1.1.1");
+  }
+  ASSERT_EQ((std::unordered_map<std::string, std::string>({
+                {"10.0.0.0", "1.1.1.1"},
+                {"10.0.0.1", "1.1.1.1"},
+                {"10.0.0.2", "1.1.1.1"},
+                {"10.0.0.3", "1.1.1.1"},
+                {"10.0.0.4", "1.1.1.1"},
+            })),
+            myClient.table());
+
+  // change a route
+  myClient.associateAddress("10.0.0.2", "1.1.1.2");
+  ASSERT_EQ((std::unordered_map<std::string, std::string>({
+                {"10.0.0.0", "1.1.1.1"},
+                {"10.0.0.1", "1.1.1.1"},
+                {"10.0.0.2", "1.1.1.2"},
+                {"10.0.0.3", "1.1.1.1"},
+                {"10.0.0.4", "1.1.1.1"},
+            })),
+            myClient.table());
+
+  // associate a client with empty address: invalid, no effect
+  myClient.associateAddress("", "1.1.1.1");
+  // associate a client to an empty address: invalid, no effect
+  myClient.associateAddress("10.0.0.2", "");
+  // both addresses are empty: invalid, no effect
+  myClient.associateAddress("", "");
+  ASSERT_EQ((std::unordered_map<std::string, std::string>({
+                {"10.0.0.0", "1.1.1.1"},
+                {"10.0.0.1", "1.1.1.1"},
+                {"10.0.0.2", "1.1.1.2"},
+                {"10.0.0.3", "1.1.1.1"},
+                {"10.0.0.4", "1.1.1.1"},
+            })),
+            myClient.table());
+
+  // add default edge router
+  myClient.defaultEdgeRouter("2.2.2.2");
+  ASSERT_EQ("2.2.2.2", myClient.defaultEdgeRouter());
+
+  // change it
+  myClient.defaultEdgeRouter("2.2.2.3");
+  ASSERT_EQ("2.2.2.3", myClient.defaultEdgeRouter());
+
+  // create another client, check that they see the same things
+  {
+    GrpcUeAppLcmProxyClient myAnotherClient(theEndpoint);
+    ASSERT_EQ(0u, myAnotherClient.numContexts());
+    ASSERT_EQ("2.2.2.3", myAnotherClient.defaultEdgeRouter());
+    ASSERT_EQ((std::unordered_map<std::string, std::string>({
+                  {"10.0.0.0", "1.1.1.1"},
+                  {"10.0.0.1", "1.1.1.1"},
+                  {"10.0.0.2", "1.1.1.2"},
+                  {"10.0.0.3", "1.1.1.1"},
+                  {"10.0.0.4", "1.1.1.1"},
+              })),
+              myAnotherClient.table());
+  }
+
+  // reset the default edge router
+  myClient.defaultEdgeRouter("");
+  ASSERT_TRUE(myClient.defaultEdgeRouter().empty());
+
+  // remove all the associations
+  for (auto i = 0; i < 5; i++) {
+    myClient.removeAddress("10.0.0." + std::to_string(i));
+  }
+  ASSERT_EQ((std::unordered_map<std::string, std::string>()), myClient.table());
 }
 
 } // namespace etsimec
