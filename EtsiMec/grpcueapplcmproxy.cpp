@@ -36,6 +36,12 @@ SOFTWARE.
 
 #include <cassert>
 
+#define CATCH_ALL(__instruction__)                                             \
+  try {                                                                        \
+    __instruction__;                                                           \
+  } catch (...) {                                                              \
+  }
+
 namespace uiiit {
 namespace etsimec {
 
@@ -54,7 +60,7 @@ grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::associateAddress(
   VLOG(1) << "request to associate " << aReq->client() << " to "
           << aReq->server() << " from " << aContext->peer();
 
-  theProxy.associateAddress(aReq->client(), aReq->server());
+  CATCH_ALL(theProxy.associateAddress(aReq->client(), aReq->server()));
   return grpc::Status::OK;
 }
 
@@ -66,10 +72,13 @@ grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::defaultEdgeRouter(
   assert(aReq);
   assert(aReq->client().empty());
   std::ignore = aRep;
-  VLOG(1) << "request to set default router to " << aReq->server() << " from "
-          << aContext->peer();
+  VLOG_IF(1, not aReq->server().empty())
+      << "request to set default router to " << aReq->server() << " from "
+      << aContext->peer();
+  VLOG_IF(1, aReq->server().empty())
+      << "request to remove the default router from " << aContext->peer();
 
-  theProxy.defaultEdgeRouter(aReq->server());
+  CATCH_ALL(theProxy.defaultEdgeRouter(aReq->server()));
   return grpc::Status::OK;
 }
 
@@ -84,7 +93,7 @@ grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::removeAddress(
   VLOG(1) << "request to remove association of " << aReq->client() << " from "
           << aContext->peer();
 
-  theProxy.removeAddress(aReq->client());
+  CATCH_ALL(theProxy.removeAddress(aReq->client()));
   return grpc::Status::OK;
 }
 
@@ -96,6 +105,20 @@ grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::numContexts(
   VLOG(2) << "request to retrieve number of contexts from " << aContext->peer();
 
   aRep->set_value(theProxy.numContexts());
+  return grpc::Status::OK;
+}
+
+grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::currentEdgeRouter(
+    grpc::ServerContext* aContext,
+    const rpc::Void*     aReq,
+    rpc::AddressTuple*   aRep) {
+  assert(aContext);
+  assert(aRep);
+  std::ignore = aReq;
+  VLOG(2) << "request to retrieve the default edge router from "
+          << aContext->peer();
+
+  aRep->set_server(theProxy.defaultEdgeRouter());
   return grpc::Status::OK;
 }
 

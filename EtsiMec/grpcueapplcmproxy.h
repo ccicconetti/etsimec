@@ -63,6 +63,9 @@ class GrpcUeAppLcmProxy final : public ::uiiit::rpc::SimpleServer
     grpc::Status numContexts(grpc::ServerContext* aContext,
                              const rpc::Void*     aReq,
                              rpc::Number*         aRep) override;
+    grpc::Status currentEdgeRouter(grpc::ServerContext* aContext,
+                                   const rpc::Void*     aReq,
+                                   rpc::AddressTuple*   aRep) override;
     grpc::Status table(grpc::ServerContext* aContext,
                        const rpc::Void*     aReq,
                        rpc::Table*          aRep) override;
