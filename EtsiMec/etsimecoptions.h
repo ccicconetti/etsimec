@@ -31,6 +31,8 @@ SOFTWARE.
 
 #include "Support/clioptions.h"
 
+#include <unordered_map>
+
 namespace uiiit {
 namespace etsimec {
 
@@ -42,13 +44,14 @@ class EtsiMecOptions final : public support::CliOptions
  public:
   EtsiMecOptions(int                                          argc,
                  char**                                       argv,
+                 const std::string& aDefaultApiRoot,
                  boost::program_options::options_description& aDesc);
 
-  //! \return the UE app LCM proxy root.
-  const std::string& lcmRoot() const noexcept;
+  //! \return the ETSI MEC API root.
+  const std::string& apiRoot() const noexcept;
 
  private:
-  std::string theLcmRoot;
+  std::string theApiRoot;
 };
 
 } // namespace etsimec

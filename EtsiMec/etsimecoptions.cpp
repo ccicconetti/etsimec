@@ -33,21 +33,24 @@ namespace uiiit {
 namespace etsimec {
 
 EtsiMecOptions::EtsiMecOptions(
-    int argc, char** argv, boost::program_options::options_description& aDesc)
+    int                                          argc,
+    char**                                       argv,
+    const std::string&                           aDefaultApiRoot,
+    boost::program_options::options_description& aDesc)
     : support::CliOptions(argc, argv, aDesc)
-    , theLcmRoot() {
+    , theApiRoot() {
   // clang-format off
   theDesc.add_options()
-  ("etsi-ue-app-lcm-proxy-root,r",
-   boost::program_options::value<std::string>(&theLcmRoot)->default_value(""),
-   "API root of the ETSI UE application LCM proxy, use --server-endpoint if empty.")
+  ("etsi-api-root",
+   boost::program_options::value<std::string>(&theApiRoot)->default_value(aDefaultApiRoot),
+   "ETSI MEC API root.")
   ;
   // clang-format on
   parse();
 }
 
-const std::string& EtsiMecOptions::lcmRoot() const noexcept {
-  return theLcmRoot;
+const std::string& EtsiMecOptions::apiRoot() const noexcept {
+  return theApiRoot;
 }
 
 } // namespace etsimec
