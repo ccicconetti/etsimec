@@ -29,6 +29,7 @@ SOFTWARE.
 
 #include "EtsiMec/appinfo.h"
 #include "EtsiMec/applistclient.h"
+#include "EtsiMec/etsimecoptions.h"
 #include "Rest/server.h"
 #include "Support/glograii.h"
 #include "Support/split.h"
@@ -185,7 +186,6 @@ class MattermostProxy : public uiiit::rest::Server
 int main(int argc, char* argv[]) {
   uiiit::support::GlogRaii myGlogRaii(argv[0]);
 
-  std::string             myApiRoot;
   std::string             myMmProxyRoot;
   std::string             myMmToken;
   std::string             myCommand;
@@ -193,10 +193,6 @@ int main(int argc, char* argv[]) {
 
   // clang-format off
   myDesc.add_options()
-  ("help,h", "produce help message")
-  ("api-root",
-   po::value<std::string>(&myApiRoot)->default_value("http://localhost:6500"),
-   "API root of the ETSI MEC server.")
   ("command",
    po::value<std::string>(&myCommand)->default_value("app_list"),
    "One of: {app_list}.")
@@ -212,17 +208,11 @@ int main(int argc, char* argv[]) {
   // clang-format on
 
   try {
-    po::variables_map myVarMap;
-    po::store(po::parse_command_line(argc, argv, myDesc), myVarMap);
-    po::notify(myVarMap);
+    uiiit::etsimec::EtsiMecOptions myCli(
+        argc, argv, "http://127.0.0.1:6500", myDesc);
 
-    if (myVarMap.count("help")) {
-      std::cout << myDesc << std::endl;
-      return EXIT_FAILURE;
-    }
-
-    const auto myVerbose    = myVarMap.count("verbose") > 0;
-    const auto myMattermost = myVarMap.count("mattermost-output") > 0;
+    const auto myVerbose    = myCli.varMap().count("verbose") > 0;
+    const auto myMattermost = myCli.varMap().count("mattermost-output") > 0;
 
     if (myVerbose and myMattermost) {
       throw std::runtime_error(
@@ -238,7 +228,7 @@ int main(int argc, char* argv[]) {
       pause();
 
     } else {
-      std::cout << command(myApiRoot, myCommand, myVerbose, myMattermost);
+      std::cout << command(myCli.apiRoot(), myCommand, myVerbose, myMattermost);
     }
 
     return EXIT_SUCCESS;
