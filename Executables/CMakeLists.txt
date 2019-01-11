@@ -21,3 +21,15 @@ target_link_libraries(ueapplcmproxy
   ${GLOG}
   ${Boost_LIBRARIES}
 )
+
+add_executable(ueapplcmproxyclient
+  ${CMAKE_CURRENT_SOURCE_DIR}/ueapplcmproxyclientmain.cpp
+)
+
+target_link_libraries(ueapplcmproxyclient
+  uiiitetsimec
+  uiiitrest
+  uiiitsupport
+  ${GLOG}
+  ${Boost_LIBRARIES}
+)
