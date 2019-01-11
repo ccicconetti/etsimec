@@ -29,6 +29,8 @@ SOFTWARE.
 
 #include "EtsiMec/etsimecoptions.h"
 
+#include <cpprest/base_uri.h>
+
 namespace uiiit {
 namespace etsimec {
 
@@ -36,6 +38,7 @@ EtsiMecOptions::EtsiMecOptions(
     int                                          argc,
     char**                                       argv,
     const std::string&                           aDefaultApiRoot,
+    const bool                                   aDefaultApiRootRequired,
     boost::program_options::options_description& aDesc)
     : support::CliOptions(argc, argv, aDesc)
     , theApiRoot() {
@@ -46,7 +49,13 @@ EtsiMecOptions::EtsiMecOptions(
    "ETSI MEC API root.")
   ;
   // clang-format on
+
   parse();
+
+  if (theApiRoot.empty() or not web::uri::validate(theApiRoot)) {
+    throw std::runtime_error(
+        "The UE app LCM proxy root cannot be empty or invalid");
+  }
 }
 
 const std::string& EtsiMecOptions::apiRoot() const noexcept {

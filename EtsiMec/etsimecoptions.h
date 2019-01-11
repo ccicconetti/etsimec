@@ -45,6 +45,7 @@ class EtsiMecOptions final : public support::CliOptions
   EtsiMecOptions(int                                          argc,
                  char**                                       argv,
                  const std::string& aDefaultApiRoot,
+                 const bool aDefaultApiRootRequired,
                  boost::program_options::options_description& aDesc);
 
   //! \return the ETSI MEC API root.
