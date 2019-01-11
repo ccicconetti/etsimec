@@ -56,11 +56,8 @@ int main(int argc, char* argv[]) {
 
   try {
     uiiit::etsimec::EtsiMecOptions myCli(
-        argc, argv, "http://127.0.0.1:6500", myDesc);
+        argc, argv, "http://127.0.0.1:6500", true, myDesc);
 
-    if (myCli.apiRoot().empty()) {
-      throw std::runtime_error("The UE app LCM proxy root cannot be empty");
-    }
     if (myServerEndpoint.empty()) {
       throw std::runtime_error("The gRPC end-point cannot be empty");
     }
@@ -71,6 +68,8 @@ int main(int argc, char* argv[]) {
     myServer.run(true); // blocking
 
     return EXIT_SUCCESS;
+  } catch (const uiiit::support::CliExit&) {
+    return EXIT_SUCCESS; // clean exit
   } catch (const std::exception& aErr) {
     LOG(ERROR) << "Exception caught: " << aErr.what();
   } catch (...) {

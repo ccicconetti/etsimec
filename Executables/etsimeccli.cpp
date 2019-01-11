@@ -49,14 +49,10 @@ std::string command(const std::string& aApiRoot,
                     const std::string& aCommand,
                     const bool         aVerbose,
                     const bool         aMattermost) {
-  std::stringstream myStream;
+  assert(not aApiRoot.empty());
+  assert(web::uri::validate(aApiRoot));
 
-  if (aApiRoot.empty()) {
-    throw std::runtime_error("Empty API root");
-  }
-  if (not web::uri::validate(aApiRoot)) {
-    throw std::runtime_error("Invalid API root: " + aApiRoot);
-  }
+  std::stringstream myStream;
 
   if (aCommand == "app_list") {
 
@@ -209,7 +205,7 @@ int main(int argc, char* argv[]) {
 
   try {
     uiiit::etsimec::EtsiMecOptions myCli(
-        argc, argv, "http://127.0.0.1:6500", myDesc);
+        argc, argv, "http://127.0.0.1:6500", true, myDesc);
 
     const auto myVerbose    = myCli.varMap().count("verbose") > 0;
     const auto myMattermost = myCli.varMap().count("mattermost-output") > 0;
@@ -232,6 +228,8 @@ int main(int argc, char* argv[]) {
     }
 
     return EXIT_SUCCESS;
+     } catch (const uiiit::support::CliExit&) {
+    return EXIT_SUCCESS; // clean exit
   } catch (const std::exception& aErr) {
     LOG(ERROR) << "Exception caught: " << aErr.what();
   } catch (...) {
