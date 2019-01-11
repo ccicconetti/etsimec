@@ -52,7 +52,7 @@ EtsiMecOptions::EtsiMecOptions(
 
   parse();
 
-  if (theApiRoot.empty() or not web::uri::validate(theApiRoot)) {
+  if (aDefaultApiRootRequired and (theApiRoot.empty() or not web::uri::validate(theApiRoot))) {
     throw std::runtime_error(
         "The UE app LCM proxy root cannot be empty or invalid");
   }
