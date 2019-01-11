@@ -1,1 +1,2 @@
 multiCondition:../Support/histogram.cpp
+compareBoolExpressionWithInt:../Executables/ueapplcmproxyclientmain.cpp	
