@@ -46,6 +46,10 @@ struct TestGrpcUeAppLcmProxy : public ::testing::Test {
 
   const std::string theProxyUri;
   const std::string theEndpoint;
+
+  static AppInfo makeApp(const std::string& aLambda) {
+    return AppInfo(aLambda, "OpenLambdaMec", "1.0", "", AppCharcs());
+  }
 };
 
 TEST_F(TestGrpcUeAppLcmProxy, test_ctor) {
@@ -89,12 +93,13 @@ TEST_F(TestGrpcUeAppLcmProxy, test_client_server) {
             })),
             myClient.table());
 
-  // associate a client with empty address: invalid, no effect
-  myClient.associateAddress("", "1.1.1.1");
-  // associate a client to an empty address: invalid, no effect
-  myClient.associateAddress("10.0.0.2", "");
-  // both addresses are empty: invalid, no effect
-  myClient.associateAddress("", "");
+  // associate a client with empty address: throws
+  ASSERT_THROW(myClient.associateAddress("", "1.1.1.1"), std::runtime_error);
+  // associate a client to an empty address: throws
+  ASSERT_THROW(myClient.associateAddress("10.0.0.2", ""), std::runtime_error);
+  // both addresses are empty: throws
+  ASSERT_THROW(myClient.associateAddress("", ""), std::runtime_error);
+  // in all cases, no effect on the proxy
   ASSERT_EQ((std::unordered_map<std::string, std::string>({
                 {"10.0.0.0", "1.1.1.1"},
                 {"10.0.0.1", "1.1.1.1"},
@@ -136,6 +141,25 @@ TEST_F(TestGrpcUeAppLcmProxy, test_client_server) {
     myClient.removeAddress("10.0.0." + std::to_string(i));
   }
   ASSERT_EQ((std::unordered_map<std::string, std::string>()), myClient.table());
+
+  //
+  // lambda testing now
+  //
+
+  // check two given lambdas do not (yet) exist
+  ASSERT_FALSE(myProxy.exists(makeApp("lambda0")));
+
+  // add a lambda from gRPC
+  myClient.addLambda("lambda0");
+  ASSERT_TRUE(myProxy.exists(makeApp("lambda0")));
+
+  // re-add it
+  myClient.addLambda("lambda0");
+  ASSERT_TRUE(myProxy.exists(makeApp("lambda0")));
+
+  // remove lambda from gRPC
+  myClient.delLambda("lambda0");
+  ASSERT_FALSE(myProxy.exists(makeApp("lambda0")));
 }
 
 } // namespace etsimec
