@@ -111,8 +111,8 @@ grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::addLambda(
     VLOG(1) << "request to add lambda function " << aReq->value() << " from "
             << aContext->peer();
 
-    CATCH_ALL(theProxy.addApp(etsimec::AppInfo(
-        aReq->value(), "OpenLambdaMec", "1.0", "", etsimec::AppCharcs())));
+    CATCH_ALL(theProxy.addApp(AppInfo(
+        aReq->value(), "OpenLambdaMec", "1.0", "", AppCharcs())));
   }
   return grpc::Status::OK;
 }
