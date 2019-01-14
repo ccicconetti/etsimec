@@ -60,6 +60,12 @@ class GrpcUeAppLcmProxy final : public ::uiiit::rpc::SimpleServer
     grpc::Status removeAddress(grpc::ServerContext*     aContext,
                                const rpc::AddressTuple* aReq,
                                rpc::Void*               aRep) override;
+    grpc::Status addLambda(grpc::ServerContext*     aContext,
+                               const rpc::Lambda* aReq,
+                               rpc::Void*               aRep) override;
+    grpc::Status delLambda(grpc::ServerContext*     aContext,
+                               const rpc::Lambda* aReq,
+                               rpc::Void*               aRep) override;
     grpc::Status numContexts(grpc::ServerContext* aContext,
                              const rpc::Void*     aReq,
                              rpc::Number*         aRep) override;

@@ -58,6 +58,10 @@ int main(int argc, char* argv[]) {
       "  clears the default edge router address\n"
       "- remove X\n"
       "  removes the association of edge client X, if present\n"
+      "- add-lambda X\n"
+      "  adds a lambda function to the list of applications\n"
+      "- del-lambda X\n"
+      "  removes from the list of applications the given lambda\n"
       "- num-contexts\n"
       "  returns the number of active UE application contexts\n"
       "- default\n"
@@ -112,6 +116,14 @@ int main(int argc, char* argv[]) {
 
       } else if (myCommand == "remove" and myTokens.size() == 2) {
         myClient.removeAddress(myTokens[1]);
+        std::cout << "OK" << std::endl;
+
+      } else if (myCommand == "add-lambda" and myTokens.size() == 2) {
+        myClient.addLambda(myTokens[1]);
+        std::cout << "OK" << std::endl;
+
+      } else if (myCommand == "del-lambda" and myTokens.size() == 2) {
+        myClient.delLambda(myTokens[1]);
         std::cout << "OK" << std::endl;
 
       } else if (myCommand == "num-contexts" and myTokens.size() == 1) {

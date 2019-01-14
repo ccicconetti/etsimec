@@ -15,6 +15,12 @@ service UeAppLcmProxy {
   // remove the association of the given edge client address
   rpc removeAddress     (AddressTuple) returns (Void) {}
 
+  // add a lambda function with given name
+  rpc addLambda         (Lambda)       returns (Void) {}
+
+  // remove a lambda function by its name
+  rpc delLambda         (Lambda)       returns (Void) {}
+
   // return the number of UE application contexts active
   rpc numContexts       (Void)         returns (Number) {}
 
@@ -41,6 +47,10 @@ message Number {
 message Table {
   // map of edge client -> router addresses
   map<string, string> values = 1;
+}
+
+message Lambda {
+  string value = 1;
 }
 
 message Void {

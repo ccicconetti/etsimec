@@ -51,14 +51,46 @@ class GrpcUeAppLcmProxyClient final
    */
   explicit GrpcUeAppLcmProxyClient(const std::string& aServerEndpoint);
 
+  //
   // set methods
-  void associateAddress(const std::string& aClient, const std::string& aServer);
-  void defaultEdgeRouter(const std::string& aServer);
-  void removeAddress(const std::string& aClient);
+  //
 
+  /**
+   * Associate edge client address aClient to the edge router address aServer.
+   *
+   * \throw std::runtime_error if aClient or aServer are empty.
+   */
+  void associateAddress(const std::string& aClient, const std::string& aServer);
+  //!  Change/clear the default edge router address.
+  void defaultEdgeRouter(const std::string& aServer);
+  /**
+   * Remove the association to the edge client aClient, if any.
+   *
+   * \throw std::runtime_error if aClient is empty.
+   */
+  void removeAddress(const std::string& aClient);
+  /**
+   * Add a new lambda function with given name.
+   *
+   * \throw std::runtime_error if the lambda name is empty.
+   */
+  void addLambda(const std::string& aLambda);
+  /**
+   * Remove a new lambda function with given name.
+   *
+   * \throw std::runtime_error if the lambda name is empty.
+   */
+  void delLambda(const std::string& aLambda);
+
+  //
   // get methods
-  size_t                                       numContexts();
-  std::string                                  defaultEdgeRouter();
+  //
+
+  //! \return the number of active UE application contexts.
+  size_t numContexts();
+  //! \return the default edge router address, or empty if not set.
+  std::string defaultEdgeRouter();
+  //! \return the association of edge client address to edge router addresses.
   std::unordered_map<std::string, std::string> table();
 };
 

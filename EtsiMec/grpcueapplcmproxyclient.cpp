@@ -40,6 +40,14 @@ GrpcUeAppLcmProxyClient::GrpcUeAppLcmProxyClient(
 
 void GrpcUeAppLcmProxyClient::associateAddress(const std::string& aClient,
                                                const std::string& aServer) {
+
+  if (aClient.empty()) {
+    throw std::runtime_error("Invalid empty edge client address");
+  }
+  if (aServer.empty()) {
+    throw std::runtime_error("Invalid empty edge router address");
+  }
+
   grpc::ClientContext myContext;
   rpc::AddressTuple   myReq;
   myReq.set_client(aClient);
@@ -61,12 +69,42 @@ void GrpcUeAppLcmProxyClient::defaultEdgeRouter(const std::string& aServer) {
 }
 
 void GrpcUeAppLcmProxyClient::removeAddress(const std::string& aClient) {
+  if (aClient.empty()) {
+    throw std::runtime_error("Invalid empty edge client address");
+  }
+
   grpc::ClientContext myContext;
   rpc::AddressTuple   myReq;
   myReq.set_client(aClient);
   rpc::Void myRep;
 
   ::uiiit::rpc::checkStatus(theStub->removeAddress(&myContext, myReq, &myRep));
+}
+
+void GrpcUeAppLcmProxyClient::addLambda(const std::string& aLambda) {
+  if (aLambda.empty()) {
+    throw std::runtime_error("Invalid empty lambda function name");
+  }
+
+  grpc::ClientContext myContext;
+  rpc::Lambda         myReq;
+  myReq.set_value(aLambda);
+  rpc::Void myRep;
+
+  ::uiiit::rpc::checkStatus(theStub->addLambda(&myContext, myReq, &myRep));
+}
+
+void GrpcUeAppLcmProxyClient::delLambda(const std::string& aLambda) {
+  if (aLambda.empty()) {
+    throw std::runtime_error("Invalid empty lambda function name");
+  }
+
+  grpc::ClientContext myContext;
+  rpc::Lambda         myReq;
+  myReq.set_value(aLambda);
+  rpc::Void myRep;
+
+  ::uiiit::rpc::checkStatus(theStub->delLambda(&myContext, myReq, &myRep));
 }
 
 size_t GrpcUeAppLcmProxyClient::numContexts() {

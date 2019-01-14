@@ -97,6 +97,46 @@ grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::removeAddress(
   return grpc::Status::OK;
 }
 
+grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::addLambda(
+    grpc::ServerContext* aContext, const rpc::Lambda* aReq, rpc::Void* aRep) {
+  assert(aContext);
+  assert(aReq);
+  assert(not aReq->value().empty());
+  std::ignore = aRep;
+
+  if (aReq->value().empty()) {
+    LOG(ERROR) << "cannot add a lambda function with no name";
+
+  } else {
+    VLOG(1) << "request to add lambda function " << aReq->value() << " from "
+            << aContext->peer();
+
+    CATCH_ALL(theProxy.addApp(etsimec::AppInfo(
+        aReq->value(), "OpenLambdaMec", "1.0", "", etsimec::AppCharcs())));
+  }
+  return grpc::Status::OK;
+}
+
+grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::delLambda(
+    grpc::ServerContext* aContext, const rpc::Lambda* aReq, rpc::Void* aRep) {
+  assert(aContext);
+  assert(aReq);
+  assert(not aReq->value().empty());
+  std::ignore = aRep;
+
+  if (aReq->value().empty()) {
+    LOG(ERROR) << "cannot remove a lambda function with no name";
+
+  } else {
+    VLOG(1) << "request to remove lambda function " << aReq->value() << " from "
+            << aContext->peer();
+
+    CATCH_ALL(theProxy.delApp(etsimec::AppInfo(
+        aReq->value(), "OpenLambdaMec", "1.0", "", etsimec::AppCharcs())));
+  }
+  return grpc::Status::OK;
+}
+
 grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::numContexts(
     grpc::ServerContext* aContext, const rpc::Void* aReq, rpc::Number* aRep) {
   assert(aContext);
