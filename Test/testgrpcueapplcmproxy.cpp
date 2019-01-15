@@ -86,6 +86,10 @@ TEST_F(TestGrpcUeAppLcmProxy, test_client_server) {
   ASSERT_EQ(0u, myClient.numContexts());
   ASSERT_EQ((Table()), myClient.table());
 
+  //
+  // check default routes
+  //
+
   // add a few routes
   Table myTable1;
   Table myTable2;
@@ -129,6 +133,37 @@ TEST_F(TestGrpcUeAppLcmProxy, test_client_server) {
   }
   ASSERT_EQ((Table()), myClient.table());
 
+  //
+  // check invidual routes
+  //
+
+  // unassociate
+  ASSERT_TRUE(myProxy.edgeRouter("1.1.1.1", "lambda0").empty());
+
+  // now it is associate
+  myClient.associateAddress("1.1.1.1", "lambda0", "edge0");
+  ASSERT_EQ("edge0", myProxy.edgeRouter("1.1.1.1", "lambda0"));
+  
+  // different address: association does not change
+  myClient.associateAddress("1.1.1.2", "lambda0", "edge1");
+  ASSERT_EQ("edge0", myProxy.edgeRouter("1.1.1.1", "lambda0"));
+  
+  // different lambda: association does not change
+  myClient.associateAddress("1.1.1.1", "lambda2", "edge1");
+  ASSERT_EQ("edge0", myProxy.edgeRouter("1.1.1.1", "lambda0"));
+  
+  // default address: association does not change
+  myClient.associateAddress("", "lambda2", "edge1");
+  ASSERT_EQ("edge0", myProxy.edgeRouter("1.1.1.1", "lambda0"));
+  
+  // individual matching association changed
+  myClient.associateAddress("1.1.1.1", "lambda0", "edge1");
+  ASSERT_EQ("edge1", myProxy.edgeRouter("1.1.1.1", "lambda0"));
+
+  // remove association
+  myClient.removeAddress("1.1.1.1", "lambda0");
+  ASSERT_TRUE(myProxy.edgeRouter("1.1.1.1", "lambda0").empty());
+  
   //
   // lambda testing now
   //

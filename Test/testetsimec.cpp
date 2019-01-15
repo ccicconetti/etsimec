@@ -240,6 +240,11 @@ TEST_F(TestEtsiMec, test_appcontextmanager_staticueapplcmproxy) {
 
   AppInfo myAppInfo("name", "provider", "1.0.0", "example app", "");
 
+  // invalid individual router request
+  ASSERT_THROW(myProxy.edgeRouter("", "name" ), std::runtime_error);
+  ASSERT_THROW(myProxy.edgeRouter("1.1.1.1", "" ), std::runtime_error);
+  ASSERT_THROW(myProxy.edgeRouter("", ""), std::runtime_error);
+
   // application does not yet exist
   ASSERT_THROW(myAppContextManager.contextCreate(myAppInfo),
                std::runtime_error);
@@ -257,6 +262,8 @@ TEST_F(TestEtsiMec, test_appcontextmanager_staticueapplcmproxy) {
   // add a default route for a given app
   myProxy.associateAddress("", "name", "default");
 
+  ASSERT_EQ("default", myProxy.edgeRouter("any-address", "name"));
+
   // now the context is created with success, with referenceURI == default
   std::map<std::string, AppContextManager*> myAppUeIDs;
   const auto ret = myAppContextManager.contextCreate(myAppInfo);
@@ -267,6 +274,8 @@ TEST_F(TestEtsiMec, test_appcontextmanager_staticueapplcmproxy) {
 
   // change the default router
   myProxy.associateAddress("", "name", "another-default");
+
+  ASSERT_EQ("another-default", myProxy.edgeRouter("any-address", "name"));
 
   // a notification should arrive to the app context manager
   ASSERT_TRUE(support::waitFor<std::string>(
