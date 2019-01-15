@@ -3,16 +3,19 @@ syntax = "proto3";
 package uiiit.etsimec.rpc;
 
 service UeAppLcmProxy {
-  // associate the address of an edge client to the address of an edge router
+  // associate the address of an edge client and an application name
+  // to the end-point of an edge router
+  //
+  // AddressTuple.client may be absent
+  // AddressTuple.appName is always present
+  // AddressTuple.server is always present
   rpc associateAddress  (AddressTuple) returns (Void) {}
 
-  // AddressTuple.client is always not present
-  // AddressTuple.server is not present if the default is to be removed
-  rpc defaultEdgeRouter (AddressTuple) returns (Void) {}
-
-  // AddressTuple.client is always present
-  // AddresTuple.server is always not present
   // remove the association of the given edge client address
+  //
+  // AddressTuple.client may be absent
+  // AddressTuple.appName is always present
+  // AddressTuple.server is always absent
   rpc removeAddress     (AddressTuple) returns (Void) {}
 
   // add a lambda function with given name
@@ -24,20 +27,17 @@ service UeAppLcmProxy {
   // return the number of UE application contexts active
   rpc numContexts       (Void)         returns (Number) {}
 
-  // return the default edge router, of an empty string if not set
-  // AddressTuple.client is always not present
-  // AddressTuple.server is not present if the default is not set
-  rpc currentEdgeRouter (Void)         returns (AddressTuple) {}
-
   // return the table of edge client-router associations
   rpc table             (Void)         returns (Table) {}
 }
 
 message AddressTuple {
-  // address of the edge client, not present in defaultEdgeRouter()
-  string client = 1;
-  // address of the edge router, not present in removeAddress()
-  string server = 2;
+  // address of the edge client, can be empty
+  string client  = 1;
+  // application name, cannot be empty
+  string appName = 2;
+  // end-point of the edge router, empty iff used in removeAddress()
+  string server  = 3;
 }
 
 message Number {
@@ -45,8 +45,7 @@ message Number {
 }
 
 message Table {
-  // map of edge client -> router addresses
-  map<string, string> values = 1;
+  repeated AddressTuple table = 1;
 }
 
 message Lambda {

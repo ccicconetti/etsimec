@@ -50,6 +50,8 @@ struct TestGrpcUeAppLcmProxy : public ::testing::Test {
   static AppInfo makeApp(const std::string& aLambda) {
     return AppInfo(aLambda, "OpenLambdaMec", "1.0", "", AppCharcs());
   }
+
+  using Table = std::list<std::tuple<std::string, std::string, std::string>>;
 };
 
 TEST_F(TestGrpcUeAppLcmProxy, test_ctor) {
@@ -66,81 +68,68 @@ TEST_F(TestGrpcUeAppLcmProxy, test_client_server) {
 
   // check initial conditions
   ASSERT_EQ(0u, myClient.numContexts());
-  ASSERT_TRUE(myClient.defaultEdgeRouter().empty());
-  ASSERT_EQ((std::unordered_map<std::string, std::string>()), myClient.table());
+  ASSERT_EQ((Table()), myClient.table());
 
   // add a few routes
   for (auto i = 0; i < 5; i++) {
-    myClient.associateAddress("10.0.0." + std::to_string(i), "1.1.1.1");
+    myClient.associateAddress(
+        "10.0.0." + std::to_string(i), "lambda0", "1.1.1.1");
   }
-  ASSERT_EQ((std::unordered_map<std::string, std::string>({
-                {"10.0.0.0", "1.1.1.1"},
-                {"10.0.0.1", "1.1.1.1"},
-                {"10.0.0.2", "1.1.1.1"},
-                {"10.0.0.3", "1.1.1.1"},
-                {"10.0.0.4", "1.1.1.1"},
+  ASSERT_EQ((Table({
+                {"10.0.0.4", "lambda0", "1.1.1.1"},
+                {"10.0.0.3", "lambda0", "1.1.1.1"},
+                {"10.0.0.2", "lambda0", "1.1.1.1"},
+                {"10.0.0.1", "lambda0", "1.1.1.1"},
+                {"10.0.0.0", "lambda0", "1.1.1.1"},
             })),
             myClient.table());
 
   // change a route
-  myClient.associateAddress("10.0.0.2", "1.1.1.2");
-  ASSERT_EQ((std::unordered_map<std::string, std::string>({
-                {"10.0.0.0", "1.1.1.1"},
-                {"10.0.0.1", "1.1.1.1"},
-                {"10.0.0.2", "1.1.1.2"},
-                {"10.0.0.3", "1.1.1.1"},
-                {"10.0.0.4", "1.1.1.1"},
+  myClient.associateAddress("10.0.0.2", "lambda0", "1.1.1.2");
+  ASSERT_EQ((Table({
+                {"10.0.0.4", "lambda0", "1.1.1.1"},
+                {"10.0.0.3", "lambda0", "1.1.1.1"},
+                {"10.0.0.2", "lambda0", "1.1.1.2"},
+                {"10.0.0.1", "lambda0", "1.1.1.1"},
+                {"10.0.0.0", "lambda0", "1.1.1.1"},
             })),
             myClient.table());
 
-  // associate a client with empty address: throws
-  ASSERT_THROW(myClient.associateAddress("", "1.1.1.1"), std::runtime_error);
+  // associate a client with empty app name: throws
+  ASSERT_THROW(myClient.associateAddress("10.0.0.2", "", "1.1.1.1"),
+               std::runtime_error);
   // associate a client to an empty address: throws
-  ASSERT_THROW(myClient.associateAddress("10.0.0.2", ""), std::runtime_error);
-  // both addresses are empty: throws
-  ASSERT_THROW(myClient.associateAddress("", ""), std::runtime_error);
+  ASSERT_THROW(myClient.associateAddress("10.0.0.2", "lambda0", ""),
+               std::runtime_error);
   // in all cases, no effect on the proxy
-  ASSERT_EQ((std::unordered_map<std::string, std::string>({
-                {"10.0.0.0", "1.1.1.1"},
-                {"10.0.0.1", "1.1.1.1"},
-                {"10.0.0.2", "1.1.1.2"},
-                {"10.0.0.3", "1.1.1.1"},
-                {"10.0.0.4", "1.1.1.1"},
+  ASSERT_EQ((Table({
+                {"10.0.0.4", "lambda0", "1.1.1.1"},
+                {"10.0.0.3", "lambda0", "1.1.1.1"},
+                {"10.0.0.2", "lambda0", "1.1.1.2"},
+                {"10.0.0.1", "lambda0", "1.1.1.1"},
+                {"10.0.0.0", "lambda0", "1.1.1.1"},
             })),
             myClient.table());
-
-  // add default edge router
-  myClient.defaultEdgeRouter("2.2.2.2");
-  ASSERT_EQ("2.2.2.2", myClient.defaultEdgeRouter());
-
-  // change it
-  myClient.defaultEdgeRouter("2.2.2.3");
-  ASSERT_EQ("2.2.2.3", myClient.defaultEdgeRouter());
 
   // create another client, check that they see the same things
   {
     GrpcUeAppLcmProxyClient myAnotherClient(theEndpoint);
     ASSERT_EQ(0u, myAnotherClient.numContexts());
-    ASSERT_EQ("2.2.2.3", myAnotherClient.defaultEdgeRouter());
-    ASSERT_EQ((std::unordered_map<std::string, std::string>({
-                  {"10.0.0.0", "1.1.1.1"},
-                  {"10.0.0.1", "1.1.1.1"},
-                  {"10.0.0.2", "1.1.1.2"},
-                  {"10.0.0.3", "1.1.1.1"},
-                  {"10.0.0.4", "1.1.1.1"},
+    ASSERT_EQ((Table({
+                  {"10.0.0.4", "lambda0", "1.1.1.1"},
+                  {"10.0.0.3", "lambda0", "1.1.1.1"},
+                  {"10.0.0.2", "lambda0", "1.1.1.2"},
+                  {"10.0.0.1", "lambda0", "1.1.1.1"},
+                  {"10.0.0.0", "lambda0", "1.1.1.1"},
               })),
               myAnotherClient.table());
   }
 
-  // reset the default edge router
-  myClient.defaultEdgeRouter("");
-  ASSERT_TRUE(myClient.defaultEdgeRouter().empty());
-
   // remove all the associations
   for (auto i = 0; i < 5; i++) {
-    myClient.removeAddress("10.0.0." + std::to_string(i));
+    myClient.removeAddress("10.0.0." + std::to_string(i), "lambda0");
   }
-  ASSERT_EQ((std::unordered_map<std::string, std::string>()), myClient.table());
+  ASSERT_EQ((Table()), myClient.table());
 
   //
   // lambda testing now

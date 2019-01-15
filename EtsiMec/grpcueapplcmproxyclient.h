@@ -34,7 +34,8 @@ SOFTWARE.
 #include "ueapplcmproxy.grpc.pb.h"
 
 #include <string>
-#include <unordered_map>
+#include <list>
+#include <utility>
 
 namespace uiiit {
 namespace etsimec {
@@ -56,19 +57,21 @@ class GrpcUeAppLcmProxyClient final
   //
 
   /**
-   * Associate edge client address aClient to the edge router address aServer.
+   * Associate edge client address aClient and application name appName to the
+   * edge router end-point aServer.
    *
    * \throw std::runtime_error if aClient or aServer are empty.
    */
-  void associateAddress(const std::string& aClient, const std::string& aServer);
-  //!  Change/clear the default edge router address.
-  void defaultEdgeRouter(const std::string& aServer);
+  void associateAddress(const std::string& aClient,
+                        const std::string& aAppName,
+                        const std::string& aServer);
   /**
-   * Remove the association to the edge client aClient, if any.
+   * Remove the association of the edge client aClient and application name
+   * appName, if any.
    *
    * \throw std::runtime_error if aClient is empty.
    */
-  void removeAddress(const std::string& aClient);
+  void removeAddress(const std::string& aClient, const std::string& aAppName);
   /**
    * Add a new lambda function with given name.
    *
@@ -88,10 +91,8 @@ class GrpcUeAppLcmProxyClient final
 
   //! \return the number of active UE application contexts.
   size_t numContexts();
-  //! \return the default edge router address, or empty if not set.
-  std::string defaultEdgeRouter();
   //! \return the association of edge client address to edge router addresses.
-  std::unordered_map<std::string, std::string> table();
+  std::list<std::tuple<std::string, std::string, std::string>> table();
 };
 
 } // namespace etsimec

@@ -49,23 +49,18 @@ int main(int argc, char* argv[]) {
       "\n"
       "Commands are read sequentially from standard input until closed. "
       "Available commands:\n"
-      "- associate X Y\n"
-      "  associates the address of the edge client X to the address of the "
-      "edge router Y\n"
-      "- default X\n"
-      "  sets the default edge router adddress to X\n"
-      "- clear-default X\n"
-      "  clears the default edge router address\n"
-      "- remove X\n"
-      "  removes the association of edge client X, if present\n"
+      "- associate C A S\n"
+      "  associates the address of the edge client C (* means \"any\") and the "
+      "application name A to the end-point of the edge router S\n"
+      "- remove C A\n"
+      "  removes the association of edge client C (* means \"any\") and "
+      "application name A, if present\n"
       "- add-lambda X\n"
       "  adds a lambda function to the list of applications\n"
       "- del-lambda X\n"
       "  removes from the list of applications the given lambda\n"
       "- num-contexts\n"
       "  returns the number of active UE application contexts\n"
-      "- default\n"
-      "  returns the address of the default edge router, if present\n"
       "- table\n"
       "  return a space-separate table of the address associations, if "
       "non-empty\n"
@@ -102,20 +97,14 @@ int main(int argc, char* argv[]) {
 
       const auto& myCommand = myTokens[0];
 
-      if (myCommand == "associate" and myTokens.size() == 3) {
-        myClient.associateAddress(myTokens[1], myTokens[2]);
+      if (myCommand == "associate" and myTokens.size() == 4) {
+        const auto myAddress = myTokens[1] == "*" ? std::string() : myTokens[1];
+        myClient.associateAddress(myAddress, myTokens[2], myTokens[3]);
         std::cout << "OK" << std::endl;
 
-      } else if (myCommand == "clear-default" and myTokens.size() == 1) {
-        myClient.defaultEdgeRouter("");
-        std::cout << "OK" << std::endl;
-
-      } else if (myCommand == "default" and myTokens.size() == 2) {
-        myClient.defaultEdgeRouter(myTokens[1]);
-        std::cout << "OK" << std::endl;
-
-      } else if (myCommand == "remove" and myTokens.size() == 2) {
-        myClient.removeAddress(myTokens[1]);
+      } else if (myCommand == "remove" and myTokens.size() == 3) {
+        const auto myAddress = myTokens[1] == "*" ? std::string() : myTokens[1];
+        myClient.removeAddress(myAddress, myTokens[2]);
         std::cout << "OK" << std::endl;
 
       } else if (myCommand == "add-lambda" and myTokens.size() == 2) {
@@ -129,12 +118,11 @@ int main(int argc, char* argv[]) {
       } else if (myCommand == "num-contexts" and myTokens.size() == 1) {
         std::cout << myClient.numContexts() << std::endl;
 
-      } else if (myCommand == "default" and myTokens.size() == 1) {
-        std::cout << myClient.defaultEdgeRouter() << std::endl;
-
       } else if (myCommand == "table" and myTokens.size() == 1) {
         for (const auto& elem : myClient.table()) {
-          std::cout << elem.first << ' ' << elem.second << '\n';
+          std::cout << (std::get<0>(elem).empty() ? "*" : std::get<0>(elem))
+                    << ' ' << std::get<1>(elem) << ' ' << std::get<2>(elem)
+                    << '\n';
         }
         std::cout << std::flush;
 

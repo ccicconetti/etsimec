@@ -39,10 +39,11 @@ GrpcUeAppLcmProxyClient::GrpcUeAppLcmProxyClient(
 }
 
 void GrpcUeAppLcmProxyClient::associateAddress(const std::string& aClient,
+                                               const std::string& aAppName,
                                                const std::string& aServer) {
 
-  if (aClient.empty()) {
-    throw std::runtime_error("Invalid empty edge client address");
+  if (aAppName.empty()) {
+    throw std::runtime_error("Invalid empty application name");
   }
   if (aServer.empty()) {
     throw std::runtime_error("Invalid empty edge router address");
@@ -51,6 +52,7 @@ void GrpcUeAppLcmProxyClient::associateAddress(const std::string& aClient,
   grpc::ClientContext myContext;
   rpc::AddressTuple   myReq;
   myReq.set_client(aClient);
+  myReq.set_appname(aAppName);
   myReq.set_server(aServer);
   rpc::Void myRep;
 
@@ -58,24 +60,16 @@ void GrpcUeAppLcmProxyClient::associateAddress(const std::string& aClient,
       theStub->associateAddress(&myContext, myReq, &myRep));
 }
 
-void GrpcUeAppLcmProxyClient::defaultEdgeRouter(const std::string& aServer) {
-  grpc::ClientContext myContext;
-  rpc::AddressTuple   myReq;
-  myReq.set_server(aServer);
-  rpc::Void myRep;
-
-  ::uiiit::rpc::checkStatus(
-      theStub->defaultEdgeRouter(&myContext, myReq, &myRep));
-}
-
-void GrpcUeAppLcmProxyClient::removeAddress(const std::string& aClient) {
-  if (aClient.empty()) {
-    throw std::runtime_error("Invalid empty edge client address");
+void GrpcUeAppLcmProxyClient::removeAddress(const std::string& aClient,
+                                            const std::string& aAppName) {
+  if (aAppName.empty()) {
+    throw std::runtime_error("Invalid empty application name");
   }
 
   grpc::ClientContext myContext;
   rpc::AddressTuple   myReq;
   myReq.set_client(aClient);
+  myReq.set_appname(aAppName);
   rpc::Void myRep;
 
   ::uiiit::rpc::checkStatus(theStub->removeAddress(&myContext, myReq, &myRep));
@@ -116,25 +110,19 @@ size_t GrpcUeAppLcmProxyClient::numContexts() {
   return myRep.value();
 }
 
-std::string GrpcUeAppLcmProxyClient::defaultEdgeRouter() {
-  grpc::ClientContext myContext;
-  rpc::Void           myReq;
-  rpc::AddressTuple   myRep;
-
-  ::uiiit::rpc::checkStatus(
-      theStub->currentEdgeRouter(&myContext, myReq, &myRep));
-  return myRep.server();
-}
-
-std::unordered_map<std::string, std::string> GrpcUeAppLcmProxyClient::table() {
+std::list<std::tuple<std::string, std::string, std::string>>
+GrpcUeAppLcmProxyClient::table() {
   grpc::ClientContext myContext;
   rpc::Void           myReq;
   rpc::Table          myRep;
 
   ::uiiit::rpc::checkStatus(theStub->table(&myContext, myReq, &myRep));
-  const auto& myTable = myRep.values();
-  return std::unordered_map<std::string, std::string>(myTable.begin(),
-                                                      myTable.end());
+  std::list<std::tuple<std::string, std::string, std::string>> myRet;
+  for (const auto& elem : myRep.table()) {
+    myRet.emplace_back(
+        std::make_tuple(elem.client(), elem.appname(), elem.server()));
+  }
+  return myRet;
 }
 
 } // namespace etsimec

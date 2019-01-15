@@ -56,29 +56,14 @@ grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::associateAddress(
     rpc::Void*               aRep) {
   assert(aContext);
   assert(aReq);
+  assert(not aReq->appname().empty());
   std::ignore = aRep;
-  VLOG(1) << "request to associate " << aReq->client() << " to "
-          << aReq->server() << " from " << aContext->peer();
+  VLOG(1) << "request to associate <" << aReq->client() << ", "
+          << aReq->appname() << "> to " << aReq->server() << " from "
+          << aContext->peer();
 
-  CATCH_ALL(theProxy.associateAddress(aReq->client(), aReq->server()));
-  return grpc::Status::OK;
-}
-
-grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::defaultEdgeRouter(
-    grpc::ServerContext*     aContext,
-    const rpc::AddressTuple* aReq,
-    rpc::Void*               aRep) {
-  assert(aContext);
-  assert(aReq);
-  assert(aReq->client().empty());
-  std::ignore = aRep;
-  VLOG_IF(1, not aReq->server().empty())
-      << "request to set default router to " << aReq->server() << " from "
-      << aContext->peer();
-  VLOG_IF(1, aReq->server().empty())
-      << "request to remove the default router from " << aContext->peer();
-
-  CATCH_ALL(theProxy.defaultEdgeRouter(aReq->server()));
+  CATCH_ALL(theProxy.associateAddress(
+      aReq->client(), aReq->appname(), aReq->server()));
   return grpc::Status::OK;
 }
 
@@ -88,12 +73,13 @@ grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::removeAddress(
     rpc::Void*               aRep) {
   assert(aContext);
   assert(aReq);
+  assert(not aReq->appname().empty());
   assert(aReq->server().empty());
   std::ignore = aRep;
-  VLOG(1) << "request to remove association of " << aReq->client() << " from "
-          << aContext->peer();
+  VLOG(1) << "request to remove association of <" << aReq->client() << ", "
+          << aReq->appname() << "> from " << aContext->peer();
 
-  CATCH_ALL(theProxy.removeAddress(aReq->client()));
+  CATCH_ALL(theProxy.removeAddress(aReq->client(), aReq->appname()));
   return grpc::Status::OK;
 }
 
@@ -111,8 +97,8 @@ grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::addLambda(
     VLOG(1) << "request to add lambda function " << aReq->value() << " from "
             << aContext->peer();
 
-    CATCH_ALL(theProxy.addApp(AppInfo(
-        aReq->value(), "OpenLambdaMec", "1.0", "", AppCharcs())));
+    CATCH_ALL(theProxy.addApp(
+        AppInfo(aReq->value(), "OpenLambdaMec", "1.0", "", AppCharcs())));
   }
   return grpc::Status::OK;
 }
@@ -148,20 +134,6 @@ grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::numContexts(
   return grpc::Status::OK;
 }
 
-grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::currentEdgeRouter(
-    grpc::ServerContext* aContext,
-    const rpc::Void*     aReq,
-    rpc::AddressTuple*   aRep) {
-  assert(aContext);
-  assert(aRep);
-  std::ignore = aReq;
-  VLOG(2) << "request to retrieve the default edge router from "
-          << aContext->peer();
-
-  aRep->set_server(theProxy.defaultEdgeRouter());
-  return grpc::Status::OK;
-}
-
 grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::table(
     grpc::ServerContext* aContext, const rpc::Void* aReq, rpc::Table* aRep) {
   assert(aContext);
@@ -169,8 +141,12 @@ grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::table(
   std::ignore = aReq;
   VLOG(2) << "request to retrieve association from " << aContext->peer();
 
-  const auto myTable = theProxy.addressAssociations();
-  aRep->mutable_values()->insert(myTable.begin(), myTable.end());
+  for (const auto& elem : theProxy.addressAssociations()) {
+    auto myTuple = aRep->add_table();
+    myTuple->set_client(std::get<0>(elem));
+    myTuple->set_appname(std::get<1>(elem));
+    myTuple->set_server(std::get<2>(elem));
+  }
   return grpc::Status::OK;
 }
 

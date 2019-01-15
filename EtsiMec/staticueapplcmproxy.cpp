@@ -41,107 +41,98 @@ namespace etsimec {
 StaticUeAppLcmProxy::StaticUeAppLcmProxy(const std::string& aApiRoot)
     : UeAppLcmProxy(aApiRoot)
     , theMutex()
-    , theDefaultEdgeRouter()
-    , theAddressAssociations()
+    , theTable()
     , theApplicationsByContextId()
     , theApplicationsByUeAppId() {
 }
 
-void StaticUeAppLcmProxy::defaultEdgeRouter(const std::string& aEdgeRouter) {
-  std::unique_lock<std::mutex> myLock(theMutex);
-  if (aEdgeRouter == theDefaultEdgeRouter) {
-    VLOG(1) << "requesting to change default edge router to previous value: "
-               "ignored";
-    return;
-  }
-  LOG_IF(INFO, not theDefaultEdgeRouter.empty())
-      << "default edge router changed from " << theDefaultEdgeRouter << " to "
-      << aEdgeRouter;
-  LOG_IF(INFO, theDefaultEdgeRouter.empty())
-      << "new default edge router " << aEdgeRouter;
-  theDefaultEdgeRouter = aEdgeRouter;
-
-  // update the descriptors
-  NotificationList myNotifications;
-  for (auto& elem : theApplicationsByContextId) {
-    if (not elem.second.theDefaultEdgeRouterAddress) {
-      continue;
-    }
-    if (aEdgeRouter != elem.second.theEdgeRouterAddress) {
-      myNotifications.emplace_back(std::make_tuple(
-          elem.second.theCallbackReference, aEdgeRouter, elem.first));
-    }
-  }
-  myLock.unlock();
-  notifyClients(myNotifications);
-}
-
 void StaticUeAppLcmProxy::associateAddress(const std::string& aAddress,
+                                           const std::string& aAppName,
                                            const std::string& aEdgeRouter) {
-  if (aAddress.empty()) {
-    throw std::runtime_error("Empty edge client address");
+  if (aAppName.empty()) {
+    throw std::runtime_error("Empty application name");
   }
   if (aEdgeRouter.empty()) {
-    throw std::runtime_error("Empty edge router address");
+    throw std::runtime_error("Empty edge router end-point");
   }
+
+  const auto myKey = AddressAppKey(aAddress, aAppName);
 
   std::unique_lock<std::mutex> myLock(theMutex);
-  auto it = theAddressAssociations.emplace(aAddress, aEdgeRouter);
+  auto                         it = theTable.emplace(myKey, aEdgeRouter);
   if (not it.second and aEdgeRouter == it.first->second) {
-    VLOG(2) << "requesting same association between " << aAddress << " and "
-            << aEdgeRouter << ": ignored";
+    VLOG(2) << "requesting same association between <" << aAddress << ", "
+            << aAppName << "> and " << aEdgeRouter << ": ignored";
     return;
   }
-  VLOG(1) << "associated address " << aAddress << " to " << aEdgeRouter;
+  VLOG(1) << "associated <" << aAddress << ", " << aAppName << "> to "
+          << aEdgeRouter;
   it.first->second = aEdgeRouter;
 
-  // update the descriptors
+  // update all descriptors whose target edge router has changed
   NotificationList myNotifications;
   for (auto& elem : theApplicationsByContextId) {
-    if (elem.second.theClientAddress != aAddress) {
+    if (elem.second.theAppName != aAppName) {
       continue;
     }
-    if (aEdgeRouter != elem.second.theEdgeRouterAddress) {
+
+    const auto it = find(elem.second.theClientAddress, elem.second.theAppName);
+    assert(it != theTable.end());
+
+    if (it->second != elem.second.theEdgeRouterEndpoint) {
       myNotifications.emplace_back(std::make_tuple(
           elem.second.theCallbackReference, aEdgeRouter, elem.first));
-      elem.second.theEdgeRouterAddress        = aEdgeRouter;
-      elem.second.theDefaultEdgeRouterAddress = false;
+      elem.second.theEdgeRouterEndpoint = aEdgeRouter;
     }
   }
   myLock.unlock();
   notifyClients(myNotifications);
 }
 
-void StaticUeAppLcmProxy::removeAddress(const std::string& aAddress) {
-  if (aAddress.empty()) {
-    throw std::runtime_error("Empty edge client address");
+void StaticUeAppLcmProxy::removeAddress(const std::string& aAddress,
+                                        const std::string& aAppName) {
+  if (aAppName.empty()) {
+    throw std::runtime_error("Empty application name");
   }
+  const auto myKey = AddressAppKey(aAddress, aAppName);
 
   std::unique_lock<std::mutex> myLock(theMutex);
-  const auto                   it = theAddressAssociations.find(aAddress);
-  if (it != theAddressAssociations.end()) {
-    VLOG(1) << "removed association of address " << aAddress << " from "
-            << it->second;
-    theAddressAssociations.erase(it);
+  const auto                   it = theTable.find(myKey);
+  if (it != theTable.end()) {
+    VLOG(1) << "removed association of <" << aAddress << ", " << aAppName
+            << "> from " << it->second;
+    theTable.erase(it);
   } else {
-    LOG(WARNING) << "trying to remove association of unassociated address "
-                 << aAddress << ": ignored";
+    LOG(WARNING) << "trying to remove unexisting entry for <" << aAddress
+                 << ", " << aAppName << ">: ignored";
   }
 
-  // update the descriptors
+  // update all descriptors whose target edge router has changed
   NotificationList myNotifications;
   for (auto& elem : theApplicationsByContextId) {
-    if (elem.second.theClientAddress != aAddress) {
+    if (elem.second.theAppName != aAppName) {
       continue;
     }
-    LOG_IF(ERROR, theDefaultEdgeRouter.empty())
-        << "an existing application has no feasible route to an edge router";
-    elem.second.theDefaultEdgeRouterAddress = true;
-    if (theDefaultEdgeRouter != elem.second.theEdgeRouterAddress and
-        not theDefaultEdgeRouter.empty()) {
-      elem.second.theEdgeRouterAddress = theDefaultEdgeRouter;
+
+    const auto it = find(elem.second.theClientAddress, elem.second.theAppName);
+
+    // it may happen that due the removal of an entry there are no more entries
+    // matching a given pair <address, app name>: in this case we simply log
+    // the error without notiying the edge client (because we would not know
+    // what to notify), but we set the edge router in the descriptor to an
+    // empty string so that if ever the pair <address, app name> is given a
+    // valid target, at least then the edge client gets notified
+    if (it == theTable.end()) {
+      LOG(ERROR) << "<" << elem.second.theClientAddress << ", "
+                 << elem.second.theAppName
+                 << "> has no valid target edge router";
+      elem.second.theEdgeRouterEndpoint = "";
+
+    } else if (it->second != elem.second.theEdgeRouterEndpoint) {
+      assert(not it->second.empty());
+      elem.second.theEdgeRouterEndpoint = it->second;
       myNotifications.emplace_back(std::make_tuple(
-          elem.second.theCallbackReference, theDefaultEdgeRouter, elem.first));
+          elem.second.theCallbackReference, it->second, elem.first));
     }
   }
   myLock.unlock();
@@ -150,7 +141,7 @@ void StaticUeAppLcmProxy::removeAddress(const std::string& aAddress) {
 
 size_t StaticUeAppLcmProxy::numAddresses() const {
   const std::lock_guard<std::mutex> myLock(theMutex);
-  return theAddressAssociations.size();
+  return theTable.size();
 }
 size_t StaticUeAppLcmProxy::numContexts() const {
   const std::lock_guard<std::mutex> myLock(theMutex);
@@ -158,15 +149,15 @@ size_t StaticUeAppLcmProxy::numContexts() const {
   return theApplicationsByContextId.size();
 }
 
-std::string StaticUeAppLcmProxy::defaultEdgeRouter() const {
-  const std::lock_guard<std::mutex> myLock(theMutex);
-  return theDefaultEdgeRouter;
-}
-
-std::unordered_map<std::string, std::string>
+std::list<std::tuple<std::string, std::string, std::string>>
 StaticUeAppLcmProxy::addressAssociations() const {
-  const std::lock_guard<std::mutex> myLock(theMutex);
-  return theAddressAssociations;
+  const std::lock_guard<std::mutex>                            myLock(theMutex);
+  std::list<std::tuple<std::string, std::string, std::string>> myRet;
+  for (const auto& elem : theTable) {
+    myRet.emplace_back(std::make_tuple(
+        elem.first.theAddress, elem.first.theAppName, elem.second));
+  }
+  return myRet;
 }
 
 AppContext StaticUeAppLcmProxy::createContext(const std::string& aClientAddress,
@@ -181,31 +172,24 @@ AppContext StaticUeAppLcmProxy::createContext(const std::string& aClientAddress,
     return aRequest;
   }
 
-  // find the address associae to the client address
-  const auto it            = theAddressAssociations.find(aClientAddress);
-  auto       myEdgeRouter  = theDefaultEdgeRouter;
-  auto       myDefaultUsed = true;
-  if (it != theAddressAssociations.end()) {
-    myEdgeRouter  = it->second;
-    myDefaultUsed = false;
-  }
-
-  // no edge router found: return request without assigning a context ID
-  if (myEdgeRouter.empty()) {
+  // find the edge router associated to the edge client address and app name
+  const auto it = find(aClientAddress, aRequest.appInfo().appName());
+  if (it == theTable.end()) {
+    // no edge router found: return request without assigning a context ID
     return aRequest;
   }
 
   // assign a unique context ID to this UE application
   const auto myResponse =
-      aRequest.makeResponse(support::Uuid().toString(), myEdgeRouter);
+      aRequest.makeResponse(support::Uuid().toString(), it->second);
 
   const auto ret =
       theApplicationsByContextId.emplace(myResponse.contextId(),
                                          Desc{aRequest.associateUeAppId(),
                                               aRequest.callbackReference(),
                                               aClientAddress,
-                                              myEdgeRouter,
-                                              myDefaultUsed});
+                                              aRequest.appInfo().appName(),
+                                              it->second});
   assert(ret.second);
 
   const auto myAppRet =
@@ -218,10 +202,9 @@ AppContext StaticUeAppLcmProxy::createContext(const std::string& aClientAddress,
       myStream << "context_id " << elem.first << ", ue_app_id "
                << elem.second.theAssociateUeAppId << ", callback "
                << elem.second.theCallbackReference << ", client_address "
-               << elem.second.theClientAddress << ", edge_router "
-               << elem.second.theEdgeRouterAddress
-               << (elem.second.theDefaultEdgeRouterAddress ? " (default)" : "")
-               << '\n';
+               << elem.second.theClientAddress << ", app_name "
+               << elem.second.theAppName << ", edge_router "
+               << elem.second.theEdgeRouterEndpoint << '\n';
     }
     VLOG(2) << "active contexts:\n" << myStream.str();
   }
@@ -313,6 +296,21 @@ bool StaticUeAppLcmProxy::purge(const std::string& aContextId) {
   theApplicationsByContextId.erase(it);
   assert(theApplicationsByContextId.size() == theApplicationsByUeAppId.size());
   return true;
+}
+
+StaticUeAppLcmProxy::Table::const_iterator
+StaticUeAppLcmProxy::find(const std::string& aAddress,
+                          const std::string& aAppName) const {
+  ASSERT_IS_LOCKED(theMutex);
+  assert(not aAppName.empty());
+
+  const auto mySpecific = theTable.find(AddressAppKey(aAddress, aAppName));
+
+  if (mySpecific != theTable.end()) {
+    return mySpecific;
+  }
+
+  return theTable.find(AddressAppKey("", aAppName)); // may be end()
 }
 
 } // namespace etsimec

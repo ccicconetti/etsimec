@@ -45,11 +45,21 @@ StaticFileUeAppLcmProxy::StaticFileUeAppLcmProxy(const std::string& aApiRoot,
   auto myEmpty = true;
   while (not myInput.eof()) {
     std::string myAddress;
+    std::string myAppName;
     std::string myEdgeRouter;
 
     myInput >> myAddress;
     if (not myInput) {
       break;
+    }
+    if (myAddress == "*") {
+      myAddress = "";
+    }
+
+    myInput >> myAppName;
+    if (not myInput) {
+      throw std::runtime_error("Configuration file " + aConfFile +
+                               " is ill-formed");
     }
 
     myInput >> myEdgeRouter;
@@ -58,10 +68,10 @@ StaticFileUeAppLcmProxy::StaticFileUeAppLcmProxy(const std::string& aApiRoot,
                                " is ill-formed");
     }
 
-    assert(not myAddress.empty() and not myEdgeRouter.empty());
+    assert(not myAppName.empty() and not myEdgeRouter.empty());
 
     myEmpty = false;
-    associateAddress(myAddress, myEdgeRouter);
+    associateAddress(myAddress, myAppName, myEdgeRouter);
   }
 
   if (myEmpty) {
