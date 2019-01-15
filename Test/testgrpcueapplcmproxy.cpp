@@ -35,6 +35,8 @@ SOFTWARE.
 
 #include <glog/logging.h>
 
+#include <set>
+
 namespace uiiit {
 namespace etsimec {
 
@@ -52,6 +54,20 @@ struct TestGrpcUeAppLcmProxy : public ::testing::Test {
   }
 
   using Table = std::list<std::tuple<std::string, std::string, std::string>>;
+
+  bool check(const Table& aLhs, const Table& aRhs) {
+    std::set<std::string> myLhs;
+    for (const auto& elem : aLhs) {
+      myLhs.insert(std::get<0>(elem) + std::get<1>(elem) + std::get<2>(elem));
+    }
+
+    std::set<std::string> myRhs;
+    for (const auto& elem : aRhs) {
+      myRhs.insert(std::get<0>(elem) + std::get<1>(elem) + std::get<2>(elem));
+    }
+
+    return myLhs == myRhs;
+  }
 };
 
 TEST_F(TestGrpcUeAppLcmProxy, test_ctor) {
@@ -71,29 +87,25 @@ TEST_F(TestGrpcUeAppLcmProxy, test_client_server) {
   ASSERT_EQ((Table()), myClient.table());
 
   // add a few routes
+  Table myTable1;
+  Table myTable2;
   for (auto i = 0; i < 5; i++) {
     myClient.associateAddress(
         "10.0.0." + std::to_string(i), "lambda0", "1.1.1.1");
+    myTable1.emplace_back(
+        std::make_tuple<std::string, std::string, std::string>(
+            "10.0.0." + std::to_string(i), "lambda0", "1.1.1.1"));
+    myTable2.emplace_back(
+        std::make_tuple<std::string, std::string, std::string>(
+            "10.0.0." + std::to_string(i),
+            "lambda0",
+            (i == 2) ? "1.1.1.2" : "1.1.1.1"));
   }
-  ASSERT_EQ((Table({
-                {"10.0.0.4", "lambda0", "1.1.1.1"},
-                {"10.0.0.3", "lambda0", "1.1.1.1"},
-                {"10.0.0.2", "lambda0", "1.1.1.1"},
-                {"10.0.0.1", "lambda0", "1.1.1.1"},
-                {"10.0.0.0", "lambda0", "1.1.1.1"},
-            })),
-            myClient.table());
+  ASSERT_TRUE(check(myTable1, myClient.table()));
 
   // change a route
   myClient.associateAddress("10.0.0.2", "lambda0", "1.1.1.2");
-  ASSERT_EQ((Table({
-                {"10.0.0.4", "lambda0", "1.1.1.1"},
-                {"10.0.0.3", "lambda0", "1.1.1.1"},
-                {"10.0.0.2", "lambda0", "1.1.1.2"},
-                {"10.0.0.1", "lambda0", "1.1.1.1"},
-                {"10.0.0.0", "lambda0", "1.1.1.1"},
-            })),
-            myClient.table());
+  ASSERT_TRUE(check(myTable2, myClient.table()));
 
   // associate a client with empty app name: throws
   ASSERT_THROW(myClient.associateAddress("10.0.0.2", "", "1.1.1.1"),
@@ -102,27 +114,13 @@ TEST_F(TestGrpcUeAppLcmProxy, test_client_server) {
   ASSERT_THROW(myClient.associateAddress("10.0.0.2", "lambda0", ""),
                std::runtime_error);
   // in all cases, no effect on the proxy
-  ASSERT_EQ((Table({
-                {"10.0.0.4", "lambda0", "1.1.1.1"},
-                {"10.0.0.3", "lambda0", "1.1.1.1"},
-                {"10.0.0.2", "lambda0", "1.1.1.2"},
-                {"10.0.0.1", "lambda0", "1.1.1.1"},
-                {"10.0.0.0", "lambda0", "1.1.1.1"},
-            })),
-            myClient.table());
+  ASSERT_TRUE(check(myTable2, myClient.table()));
 
   // create another client, check that they see the same things
   {
     GrpcUeAppLcmProxyClient myAnotherClient(theEndpoint);
     ASSERT_EQ(0u, myAnotherClient.numContexts());
-    ASSERT_EQ((Table({
-                  {"10.0.0.4", "lambda0", "1.1.1.1"},
-                  {"10.0.0.3", "lambda0", "1.1.1.1"},
-                  {"10.0.0.2", "lambda0", "1.1.1.2"},
-                  {"10.0.0.1", "lambda0", "1.1.1.1"},
-                  {"10.0.0.0", "lambda0", "1.1.1.1"},
-              })),
-              myAnotherClient.table());
+    ASSERT_TRUE(check(myTable2, myClient.table()));
   }
 
   // remove all the associations
