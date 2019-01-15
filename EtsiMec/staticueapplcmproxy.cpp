@@ -149,6 +149,23 @@ size_t StaticUeAppLcmProxy::numContexts() const {
   return theApplicationsByContextId.size();
 }
 
+std::string StaticUeAppLcmProxy::edgeRouter(const std::string& aAddress,
+                                            const std::string  aAppName) const {
+  if (aAddress.empty()) {
+    throw std::runtime_error("Empty edge client address");
+  }
+  if (aAppName.empty()) {
+    throw std::runtime_error("Empty application name");
+  }
+
+  const std::lock_guard<std::mutex> myLock(theMutex);
+  const auto                        it = find(aAddress, aAppName);
+  if (it == theTable.end()) {
+    return "";
+  }
+  return it->second;
+}
+
 std::list<std::tuple<std::string, std::string, std::string>>
 StaticUeAppLcmProxy::addressAssociations() const {
   const std::lock_guard<std::mutex>                            myLock(theMutex);

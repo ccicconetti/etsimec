@@ -137,6 +137,14 @@ class StaticUeAppLcmProxy : public UeAppLcmProxy
   //! \return the number of active application contexts.
   size_t numContexts() const;
 
+  /**
+   * \return the edge router client associated to this pair, or empty if none.
+   *
+   * \throw std::runtime_error if aAddress or aAppName are empty.
+   */
+  std::string edgeRouter(const std::string& aAddress,
+                         const std::string  aAppName) const;
+
   //! \return the address associations table.
   std::list<std::tuple<std::string, std::string, std::string>>
   addressAssociations() const;
