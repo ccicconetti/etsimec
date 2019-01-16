@@ -95,6 +95,16 @@ class StaticUeAppLcmProxy : public UeAppLcmProxy
   };
   using ApplicationsByContextId = std::unordered_map<std::string, Desc>;
 
+  // 0 edge client address   (never empty)
+  // 1 application name      (never empty)
+  // 2 edge router end-point (can be empty)
+  using ClientTuple = std::tuple<std::string, std::string, std::string>;
+
+  // 0 edge client address   (can be empty)
+  // 1 application name      (never empty)
+  // 2 edge router end-point (never empty)
+  using TableTuple = std::tuple<std::string, std::string, std::string>;
+
   using Table = std::unordered_map<AddressAppKey, std::string>;
 
   // 0 callbackReference
@@ -146,14 +156,16 @@ class StaticUeAppLcmProxy : public UeAppLcmProxy
                          const std::string  aAppName) const;
 
   //! \return the address associations table.
-  std::list<std::tuple<std::string, std::string, std::string>>
+  std::list<TableTuple>
   addressAssociations() const;
 
- protected:
-  AppContext createContext(const std::string& aClientAddress,
-                           const AppContext&  aRequest) override;
-  bool       updateContext(const AppContext& aRequest) override;
-  bool       deleteContext(const std::string& aContextId) override;
+  //! \return the clients with an active contexts.
+  std::list<ClientTuple> contexts() const;
+
+      protected : AppContext createContext(const std::string& aClientAddress,
+                                           const AppContext& aRequest) override;
+  bool                       updateContext(const AppContext& aRequest) override;
+  bool deleteContext(const std::string& aContextId) override;
 
  private:
   /**
