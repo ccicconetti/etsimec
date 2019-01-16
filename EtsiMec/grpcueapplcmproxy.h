@@ -69,6 +69,9 @@ class GrpcUeAppLcmProxy final : public ::uiiit::rpc::SimpleServer
     grpc::Status table(grpc::ServerContext* aContext,
                        const rpc::Void*     aReq,
                        rpc::Table*          aRep) override;
+    grpc::Status contexts(grpc::ServerContext* aContext,
+                       const rpc::Void*     aReq,
+                       rpc::Contexts*          aRep) override;
 
    private:
     StaticUeAppLcmProxy& theProxy;

@@ -46,7 +46,7 @@ namespace etsimec {
  */
 class UeAppLcmProxy : public EtsiMecServer
 {
-FRIEND_TEST(TestGrpcUeAppLcmProxy, test_client_server);
+  FRIEND_TEST(TestGrpcUeAppLcmProxy, test_lambda);
 
   NONCOPYABLE_NONMOVABLE(UeAppLcmProxy);
 

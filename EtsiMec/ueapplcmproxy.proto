@@ -29,6 +29,9 @@ service UeAppLcmProxy {
 
   // return the table of edge client-router associations
   rpc table             (Void)         returns (Table) {}
+
+  // return the table of active contexts
+  rpc contexts          (Void)         returns (Contexts) {}
 }
 
 message AddressTuple {
@@ -46,6 +49,18 @@ message Number {
 
 message Table {
   repeated AddressTuple table = 1;
+}
+
+message Contexts {
+  message ContextTuple {
+    // address of the edge client, cannot be empty
+    string address    = 1;
+    // application name, cannot be empty
+    string appName    = 2;
+    // end-point of the currently serving edge router, can be empty
+    string edgeRouter = 3;
+  }
+  repeated ContextTuple contexts = 1;
 }
 
 message Lambda {

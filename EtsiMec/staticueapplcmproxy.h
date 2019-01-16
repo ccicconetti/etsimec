@@ -156,16 +156,16 @@ class StaticUeAppLcmProxy : public UeAppLcmProxy
                          const std::string  aAppName) const;
 
   //! \return the address associations table.
-  std::list<TableTuple>
-  addressAssociations() const;
+  std::list<TableTuple> addressAssociations() const;
 
   //! \return the clients with an active contexts.
   std::list<ClientTuple> contexts() const;
 
-      protected : AppContext createContext(const std::string& aClientAddress,
-                                           const AppContext& aRequest) override;
-  bool                       updateContext(const AppContext& aRequest) override;
-  bool deleteContext(const std::string& aContextId) override;
+ protected:
+  AppContext createContext(const std::string& aClientAddress,
+                           const AppContext&  aRequest) override;
+  bool       updateContext(const AppContext& aRequest) override;
+  bool       deleteContext(const std::string& aContextId) override;
 
  private:
   /**

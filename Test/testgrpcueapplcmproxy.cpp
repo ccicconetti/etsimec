@@ -31,11 +31,12 @@ SOFTWARE.
 
 #include "EtsiMec/grpcueapplcmproxy.h"
 #include "EtsiMec/grpcueapplcmproxyclient.h"
-#include "EtsiMec/staticueapplcmproxy.h"
 
 #include <glog/logging.h>
 
 #include <set>
+
+#include "trivialstaticueapplcmproxy.h"
 
 namespace uiiit {
 namespace etsimec {
@@ -68,6 +69,19 @@ struct TestGrpcUeAppLcmProxy : public ::testing::Test {
 
     return myLhs == myRhs;
   }
+
+  static bool contextExists(GrpcUeAppLcmProxyClient& aClient,
+                      const std::string&       aAddress,
+                      const std::string&       aAppName,
+                      const std::string&       aEdgeRouter) {
+    for (const auto& elem : aClient.contexts()) {
+      if (std::get<0>(elem) == aAddress and std::get<1>(elem) == aAppName and
+          std::get<2>(elem) == aEdgeRouter) {
+        return true;
+      }
+    }
+    return false;
+  }
 };
 
 TEST_F(TestGrpcUeAppLcmProxy, test_ctor) {
@@ -75,7 +89,7 @@ TEST_F(TestGrpcUeAppLcmProxy, test_ctor) {
   ASSERT_NO_THROW(GrpcUeAppLcmProxy(theEndpoint, myProxy));
 }
 
-TEST_F(TestGrpcUeAppLcmProxy, test_client_server) {
+TEST_F(TestGrpcUeAppLcmProxy, test_addresses) {
   StaticUeAppLcmProxy myProxy(theProxyUri);
   GrpcUeAppLcmProxy   myServer(theEndpoint, myProxy);
   myProxy.start();
@@ -143,19 +157,19 @@ TEST_F(TestGrpcUeAppLcmProxy, test_client_server) {
   // now it is associate
   myClient.associateAddress("1.1.1.1", "lambda0", "edge0");
   ASSERT_EQ("edge0", myProxy.edgeRouter("1.1.1.1", "lambda0"));
-  
+
   // different address: association does not change
   myClient.associateAddress("1.1.1.2", "lambda0", "edge1");
   ASSERT_EQ("edge0", myProxy.edgeRouter("1.1.1.1", "lambda0"));
-  
+
   // different lambda: association does not change
   myClient.associateAddress("1.1.1.1", "lambda2", "edge1");
   ASSERT_EQ("edge0", myProxy.edgeRouter("1.1.1.1", "lambda0"));
-  
+
   // default address: association does not change
   myClient.associateAddress("", "lambda2", "edge1");
   ASSERT_EQ("edge0", myProxy.edgeRouter("1.1.1.1", "lambda0"));
-  
+
   // individual matching association changed
   myClient.associateAddress("1.1.1.1", "lambda0", "edge1");
   ASSERT_EQ("edge1", myProxy.edgeRouter("1.1.1.1", "lambda0"));
@@ -163,10 +177,14 @@ TEST_F(TestGrpcUeAppLcmProxy, test_client_server) {
   // remove association
   myClient.removeAddress("1.1.1.1", "lambda0");
   ASSERT_TRUE(myProxy.edgeRouter("1.1.1.1", "lambda0").empty());
-  
-  //
-  // lambda testing now
-  //
+}
+
+TEST_F(TestGrpcUeAppLcmProxy, test_lambda) {
+  StaticUeAppLcmProxy myProxy(theProxyUri);
+  GrpcUeAppLcmProxy   myServer(theEndpoint, myProxy);
+  myProxy.start();
+  myServer.run(false); // non-blocking
+  GrpcUeAppLcmProxyClient myClient(theEndpoint);
 
   // check two given lambdas do not (yet) exist
   ASSERT_FALSE(myProxy.exists(makeApp("lambda0")));
@@ -182,6 +200,39 @@ TEST_F(TestGrpcUeAppLcmProxy, test_client_server) {
   // remove lambda from gRPC
   myClient.delLambda("lambda0");
   ASSERT_FALSE(myProxy.exists(makeApp("lambda0")));
+}
+
+TEST_F(TestGrpcUeAppLcmProxy, test_contexts) {
+  TrivialStaticUeAppLcmProxy myProxy(theProxyUri, {"lambda0", "lambda1"});
+  GrpcUeAppLcmProxy          myServer(theEndpoint, myProxy);
+  myProxy.start();
+  myServer.run(false); // non-blocking
+  GrpcUeAppLcmProxyClient myClient(theEndpoint);
+
+  // check initial conditions
+  ASSERT_EQ(0u, myClient.numContexts());
+  ASSERT_TRUE(myClient.contexts().empty());
+
+  // try adding a context with no route
+  ASSERT_FALSE(myProxy.add("1.1.1.1", "lambda0"));
+
+  // add a default route for lambda0
+  myClient.associateAddress("", "lambda0", "edge0");
+
+  // add an individual route for 1.1.1.1 and lambda1
+  myClient.associateAddress("1.1.1.1", "lambda1", "edge1");
+
+  // add a few contexts, with success
+  ASSERT_TRUE(myProxy.add("1.1.1.1", "lambda0"));
+  ASSERT_TRUE(myProxy.add("1.1.1.1", "lambda0")); // same
+  ASSERT_TRUE(myProxy.add("1.1.1.1", "lambda1"));
+  ASSERT_TRUE(myProxy.add("1.1.1.2", "lambda0"));
+
+  ASSERT_EQ(4u, myClient.numContexts());
+  ASSERT_TRUE(contextExists(myClient, "1.1.1.1", "lambda0", "edge0"));
+  ASSERT_TRUE(contextExists(myClient, "1.1.1.1", "lambda0", "edge0"));
+  ASSERT_TRUE(contextExists(myClient, "1.1.1.1", "lambda1", "edge1"));
+  ASSERT_TRUE(contextExists(myClient, "1.1.1.1", "lambda0", "edge0"));
 }
 
 } // namespace etsimec

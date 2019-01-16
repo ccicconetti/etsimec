@@ -33,8 +33,8 @@ SOFTWARE.
 
 #include "ueapplcmproxy.grpc.pb.h"
 
-#include <string>
 #include <list>
+#include <string>
 #include <utility>
 
 namespace uiiit {
@@ -65,6 +65,7 @@ class GrpcUeAppLcmProxyClient final
   void associateAddress(const std::string& aClient,
                         const std::string& aAppName,
                         const std::string& aServer);
+
   /**
    * Remove the association of the edge client aClient and application name
    * appName, if any.
@@ -72,11 +73,13 @@ class GrpcUeAppLcmProxyClient final
    * \throw std::runtime_error if aClient is empty.
    */
   void removeAddress(const std::string& aClient, const std::string& aAppName);
+
   /**
    * Add a new lambda function with given name.
    *
    * \throw std::runtime_error if the lambda name is empty.
    */
+
   void addLambda(const std::string& aLambda);
   /**
    * Remove a new lambda function with given name.
@@ -91,8 +94,12 @@ class GrpcUeAppLcmProxyClient final
 
   //! \return the number of active UE application contexts.
   size_t numContexts();
+
   //! \return the association of edge client address to edge router addresses.
   std::list<std::tuple<std::string, std::string, std::string>> table();
+
+  //! \return the active contexts
+  std::list<std::tuple<std::string, std::string, std::string>> contexts();
 };
 
 } // namespace etsimec

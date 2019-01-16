@@ -150,6 +150,22 @@ grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::table(
   return grpc::Status::OK;
 }
 
+grpc::Status GrpcUeAppLcmProxy::GrpcUeAppLcmProxyImpl::contexts(
+    grpc::ServerContext* aContext, const rpc::Void* aReq, rpc::Contexts* aRep) {
+  assert(aContext);
+  assert(aRep);
+  std::ignore = aReq;
+  VLOG(2) << "request to retrieve contexts from " << aContext->peer();
+
+  for (const auto& elem : theProxy.contexts()) {
+    auto myTuple = aRep->add_contexts();
+    myTuple->set_address(std::get<0>(elem));
+    myTuple->set_appname(std::get<1>(elem));
+    myTuple->set_edgerouter(std::get<2>(elem));
+  }
+  return grpc::Status::OK;
+}
+
 GrpcUeAppLcmProxy::GrpcUeAppLcmProxy(const std::string&   aServerEndpoint,
                                      StaticUeAppLcmProxy& aProxy)
     : SimpleServer(aServerEndpoint)

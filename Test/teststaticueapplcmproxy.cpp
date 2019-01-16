@@ -44,6 +44,8 @@ SOFTWARE.
 #include <map>
 #include <thread>
 
+#include "trivialstaticueapplcmproxy.h"
+
 namespace uiiit {
 namespace etsimec {
 
@@ -187,6 +189,38 @@ TEST_F(TestStaticUeAppLcmProxy, test_appcontextmanager_notifications) {
   // deleting the context manager also forces the contexts to be removed
   ASSERT_TRUE(support::waitFor<size_t>(
       [&]() { return theProxy.numContexts(); }, 1, 1.0));
+}
+
+TEST_F(TestStaticUeAppLcmProxy, test_contexts) {
+  TrivialStaticUeAppLcmProxy myProxy(theProxyUri, {"lambda0", "lambda1"});
+
+  // check initial conditions
+  ASSERT_EQ(0u, myProxy.numContexts());
+  ASSERT_TRUE(myProxy.contexts().empty());
+
+  // try adding a context with no route
+  ASSERT_FALSE(myProxy.add("1.1.1.1", "lambda0"));
+
+  // add a default route for lambda0
+  myProxy.associateAddress("", "lambda0", "edge0");
+
+  // add an individual route for 1.1.1.1 and lambda1
+  myProxy.associateAddress("1.1.1.1", "lambda1", "edge1");
+
+  // add a few contexts, with success
+  ASSERT_TRUE(myProxy.add("1.1.1.1", "lambda0"));
+  ASSERT_TRUE(myProxy.add("1.1.1.1", "lambda0")); // same
+  ASSERT_TRUE(myProxy.add("1.1.1.1", "lambda1"));
+  ASSERT_TRUE(myProxy.add("1.1.1.2", "lambda0"));
+  ASSERT_EQ(4u, myProxy.numContexts());
+  ASSERT_TRUE(myProxy.contextExists("1.1.1.1", "lambda0", "edge0"));
+  ASSERT_TRUE(myProxy.contextExists("1.1.1.1", "lambda0", "edge0"));
+  ASSERT_TRUE(myProxy.contextExists("1.1.1.1", "lambda1", "edge1"));
+  ASSERT_TRUE(myProxy.contextExists("1.1.1.1", "lambda0", "edge0"));
+
+  // this one fails
+  ASSERT_FALSE(myProxy.add("1.1.1.2", "lambda1"));
+  ASSERT_EQ(4u, myProxy.numContexts());
 }
 
 } // namespace etsimec

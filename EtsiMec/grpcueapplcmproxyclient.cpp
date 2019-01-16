@@ -125,5 +125,20 @@ GrpcUeAppLcmProxyClient::table() {
   return myRet;
 }
 
+std::list<std::tuple<std::string, std::string, std::string>>
+GrpcUeAppLcmProxyClient::contexts() {
+  grpc::ClientContext myContext;
+  rpc::Void           myReq;
+  rpc::Contexts          myRep;
+
+  ::uiiit::rpc::checkStatus(theStub->contexts(&myContext, myReq, &myRep));
+  std::list<std::tuple<std::string, std::string, std::string>> myRet;
+  for (const auto& elem : myRep.contexts()) {
+    myRet.emplace_back(
+        std::make_tuple(elem.address(), elem.appname(), elem.edgerouter()));
+  }
+  return myRet;
+}
+
 } // namespace etsimec
 } // namespace uiiit

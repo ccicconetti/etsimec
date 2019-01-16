@@ -166,7 +166,8 @@ std::string StaticUeAppLcmProxy::edgeRouter(const std::string& aAddress,
   return it->second;
 }
 
-std::list<StaticUeAppLcmProxy::TableTuple> StaticUeAppLcmProxy::addressAssociations() const {
+std::list<StaticUeAppLcmProxy::TableTuple>
+StaticUeAppLcmProxy::addressAssociations() const {
   const std::lock_guard<std::mutex> myLock(theMutex);
   std::list<TableTuple>             myRet;
   for (const auto& elem : theTable) {
@@ -176,7 +177,8 @@ std::list<StaticUeAppLcmProxy::TableTuple> StaticUeAppLcmProxy::addressAssociati
   return myRet;
 }
 
-std::list<StaticUeAppLcmProxy::ClientTuple> StaticUeAppLcmProxy::contexts() const {
+std::list<StaticUeAppLcmProxy::ClientTuple>
+StaticUeAppLcmProxy::contexts() const {
   const std::lock_guard<std::mutex> myLock(theMutex);
   std::list<ClientTuple>            myRet;
   for (const auto& elem : theApplicationsByContextId) {
