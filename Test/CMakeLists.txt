@@ -28,6 +28,7 @@ include_directories(${CMAKE_BINARY_DIR}/googletest-src/googletest/include)
 add_library(testlib SHARED
   ${CMAKE_CURRENT_SOURCE_DIR}/testetsimec.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/testgrpcueapplcmproxy.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/teststaticueapplcmproxy.cpp
 )
 
 target_link_libraries(testlib

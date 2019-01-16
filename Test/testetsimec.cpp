@@ -32,7 +32,6 @@ SOFTWARE.
 #include "EtsiMec/appcontext.h"
 #include "EtsiMec/appcontextmanager.h"
 #include "EtsiMec/staticfileueapplcmproxy.h"
-#include "EtsiMec/staticueapplcmproxy.h"
 #include "EtsiMec/trivialueapplcmproxy.h"
 #include "Rest/client.h"
 #include "Support/wait.h"
@@ -229,123 +228,6 @@ TEST_F(TestEtsiMec, test_appcontextmanager) {
   ASSERT_THROW(myAppContextManager.contextCreate(
                    AppInfo("name", "provider", "1.0.0", "example app", "")),
                std::runtime_error);
-}
-
-TEST_F(TestEtsiMec, test_appcontextmanager_staticueapplcmproxy) {
-  const std::string   myNotificationUri = "http://localhost:10001";
-  StaticUeAppLcmProxy myProxy(theProxyUri);
-  myProxy.start();
-  AppContextManager myAppContextManager(myNotificationUri, theProxyUri);
-  myAppContextManager.start();
-
-  AppInfo myAppInfo("name", "provider", "1.0.0", "example app", "");
-
-  // invalid individual router request
-  ASSERT_THROW(myProxy.edgeRouter("", "name" ), std::runtime_error);
-  ASSERT_THROW(myProxy.edgeRouter("1.1.1.1", "" ), std::runtime_error);
-  ASSERT_THROW(myProxy.edgeRouter("", ""), std::runtime_error);
-
-  // application does not yet exist
-  ASSERT_THROW(myAppContextManager.contextCreate(myAppInfo),
-               std::runtime_error);
-  ASSERT_EQ(0u, myProxy.numContexts());
-
-  // create the application
-  myProxy.addApp(
-      AppInfo("name", "provider", "1.0.0", "example app", AppCharcs()));
-
-  // no route to the client
-  ASSERT_THROW(myAppContextManager.contextCreate(myAppInfo),
-               std::runtime_error);
-  ASSERT_EQ(0u, myProxy.numContexts());
-
-  // add a default route for a given app
-  myProxy.associateAddress("", "name", "default");
-
-  ASSERT_EQ("default", myProxy.edgeRouter("any-address", "name"));
-
-  // now the context is created with success, with referenceURI == default
-  std::map<std::string, AppContextManager*> myAppUeIDs;
-  const auto ret = myAppContextManager.contextCreate(myAppInfo);
-  ASSERT_EQ("default", ret.second);
-  ASSERT_EQ("default", myAppContextManager.referenceUri(ret.first));
-  myAppUeIDs.emplace(ret.first, &myAppContextManager);
-  ASSERT_EQ(1u, myProxy.numContexts());
-
-  // change the default router
-  myProxy.associateAddress("", "name", "another-default");
-
-  ASSERT_EQ("another-default", myProxy.edgeRouter("any-address", "name"));
-
-  // a notification should arrive to the app context manager
-  ASSERT_TRUE(support::waitFor<std::string>(
-      [&]() { return myAppContextManager.referenceUri(ret.first); },
-      "another-default",
-      1));
-
-  // create a few more new contexts from another app context manager
-  const std::string myNotificationUri2 = "http://localhost:10002";
-  auto              myAnotherAppContextManager =
-      std::make_unique<AppContextManager>(myNotificationUri2, theProxyUri);
-  myAnotherAppContextManager->start();
-
-  for (auto i = 0; i < 5; i++) {
-    const auto ret = myAnotherAppContextManager->contextCreate(myAppInfo);
-    ASSERT_EQ("another-default", ret.second);
-    ASSERT_EQ("another-default",
-              myAnotherAppContextManager->referenceUri(ret.first));
-    myAppUeIDs.emplace(ret.first, myAnotherAppContextManager.get());
-  }
-  ASSERT_EQ(myAppUeIDs.size(), myProxy.numContexts());
-
-  // change router for a non-existing client
-  myProxy.associateAddress("::2", "name", "mars");
-
-  // nothing should have changed
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-  for (const auto& elem : myAppUeIDs) {
-    assert(elem.second != nullptr);
-    ASSERT_EQ("another-default", elem.second->referenceUri(elem.first));
-  }
-
-  // now change the router a the actual clients with application contexts
-  myProxy.associateAddress("::1", "name", "moon");
-
-  // the edge router should be update for all
-  const auto myCheckAll = [&](const std::string& aExpected) {
-    auto myAsExpected = true;
-    for (const auto& elem : myAppUeIDs) {
-      assert(elem.second != nullptr);
-      myAsExpected &= elem.second->referenceUri(elem.first) == aExpected;
-    }
-    return myAsExpected;
-  };
-  ASSERT_TRUE(
-      support::waitFor<bool>([&]() { return myCheckAll("moon"); }, true, 1));
-  ASSERT_EQ(myAppUeIDs.size(), myProxy.numContexts());
-
-  // remove association from the address of all contexts so far
-  myProxy.removeAddress("::1", "name");
-
-  // all applications should fall back on the default router
-  ASSERT_TRUE(support::waitFor<bool>(
-      [&]() { return myCheckAll("another-default"); }, true, 1));
-  ASSERT_EQ(myAppUeIDs.size(), myProxy.numContexts());
-
-  // change default router again
-  myProxy.associateAddress("", "name", "venus");
-
-  // all applications must update to that
-  ASSERT_TRUE(
-      support::waitFor<bool>([&]() { return myCheckAll("venus"); }, true, 1));
-  ASSERT_EQ(myAppUeIDs.size(), myProxy.numContexts());
-
-  // terminate the second context manager
-  myAnotherAppContextManager.reset();
-
-  // deleting the context manager also forces the contexts to be removed
-  ASSERT_TRUE(support::waitFor<size_t>(
-      [&]() { return myProxy.numContexts(); }, 1, 1.0));
 }
 
 TEST_F(TestEtsiMec, test_staticfileueapplcmproxy) {
