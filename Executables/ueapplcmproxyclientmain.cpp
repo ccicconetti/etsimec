@@ -44,33 +44,35 @@ namespace po = boost::program_options;
 int main(int argc, char* argv[]) {
   uiiit::support::GlogRaii myGlogRaii(argv[0]);
 
-  po::options_description myDesc(
-      "Command-line utility to query a static UE application LCM proxy.\n"
-      "\n"
+  const std::string myHelp(
       "Commands are read sequentially from standard input until closed. "
       "Available commands:\n"
-      "- associate C A S\n"
-      "  associates the address of the edge client C (* means \"any\") and the "
+      "- help:"
+      " prints the help\n"
+      "- associate C A S:"
+      " associates the address of the edge client C (* means \"any\") and the "
       "application name A to the end-point of the edge router S\n"
-      "- remove C A\n"
-      "  removes the association of edge client C (* means \"any\") and "
+      "- remove C A:"
+      " removes the association of edge client C (* means \"any\") and "
       "application name A, if present\n"
-      "- add-lambda X\n"
-      "  adds a lambda function to the list of applications\n"
-      "- del-lambda X\n"
-      "  removes from the list of applications the given lambda\n"
-      "- num-contexts\n"
-      "  returns the number of active UE application contexts\n"
-      "- table\n"
-      "  return a space-separate table of the address associations, if "
-      "non-empty\n"
-      "- quit\n"
-      "  exits from the application\n"
-      "\n"
+      "- add-lambda X:"
+      " adds a lambda function to the list of applications\n"
+      "- del-lambda X:"
+      " removes from the list of applications the given lambda\n"
+      "- num-contexts:"
+      " returns the number of active UE application contexts\n"
+      "- table:"
+      " returns a space-separate table of the address associations\n"
+      "- contexts:"
+      " returns a space-separate table of the active contexts associations\n"
+      "- quit:"
+      " exits from the application\n"
       "Every command is given a response on standard output.\n"
       "All the set commands return the string OK if the command was accepted.\n"
-      "the string Invalid command if the command is not well-formed.\n\n"
-      "Allowed options");
+      "the string Invalid command if the command is not well-formed.\n");
+  po::options_description myDesc(
+      "Command-line utility to query a static UE application LCM proxy.\n" +
+      myHelp + "\nAllowed options");
   std::string myServerEndpoint;
 
   // clang-format off
@@ -97,7 +99,10 @@ int main(int argc, char* argv[]) {
 
       const auto& myCommand = myTokens[0];
 
-      if (myCommand == "associate" and myTokens.size() == 4) {
+      if (myCommand == "help") {
+        std::cout << myHelp << std::endl;
+
+      } else if (myCommand == "associate" and myTokens.size() == 4) {
         const auto myAddress = myTokens[1] == "*" ? std::string() : myTokens[1];
         myClient.associateAddress(myAddress, myTokens[2], myTokens[3]);
         std::cout << "OK" << std::endl;
@@ -120,6 +125,14 @@ int main(int argc, char* argv[]) {
 
       } else if (myCommand == "table" and myTokens.size() == 1) {
         for (const auto& elem : myClient.table()) {
+          std::cout << (std::get<0>(elem).empty() ? "*" : std::get<0>(elem))
+                    << ' ' << std::get<1>(elem) << ' ' << std::get<2>(elem)
+                    << '\n';
+        }
+        std::cout << std::flush;
+
+      } else if (myCommand == "contexts" and myTokens.size() == 1) {
+        for (const auto& elem : myClient.contexts()) {
           std::cout << (std::get<0>(elem).empty() ? "*" : std::get<0>(elem))
                     << ' ' << std::get<1>(elem) << ' ' << std::get<2>(elem)
                     << '\n';
