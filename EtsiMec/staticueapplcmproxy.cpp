@@ -224,6 +224,7 @@ AppContext StaticUeAppLcmProxy::createContext(const std::string& aClientAddress,
   const auto myAppRet =
       theApplicationsByUeAppId.emplace(aRequest.associateUeAppId(), ret.first);
   assert(myAppRet.second);
+  std::ignore = myAppRet;
 
   if (VLOG_IS_ON(2)) {
     std::stringstream myStream;
