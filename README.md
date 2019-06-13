@@ -1,5 +1,7 @@
 # uiiit::etsimec
 
+![MEC scenario](doc/scenario.png)
+
 ## Description
 
 A partial work-in-progress implementation of the [ETSI MEC](https://www.etsi.org/technologies/multi-access-edge-computing) APIs in C++.
