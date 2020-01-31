@@ -58,13 +58,22 @@ class Invoker final
    *
    * \param aParams The parameters.
    *
-   * \return the action result, if successful; otherwise, an empty string.
+   * \return a pair containing a flag on whether the action was successful or
+   * not and a string representing an explanation of the error (if not
+   * successful) or the result of the action (if successful).
    */
-  std::string operator()(const std::string&          aName,
-                         const std::map<std::string, std::string> aParams) const;
+  std::pair<bool, std::string>
+  operator()(const std::string&                       aName,
+             const std::map<std::string, std::string> aParams) const noexcept;
+
+  //! Invoke without parameters.
+  std::pair<bool, std::string> operator()(const std::string& aName) const
+      noexcept;
 
  private:
   const std::string theApiRoot;
+  const std::string thePath;
+  const std::string theQuery;
   const std::string theAuth;
 };
 

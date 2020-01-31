@@ -40,7 +40,9 @@ namespace wsk {
 
 Invoker::Invoker(const std::string& aApiRoot, const std::string& aAuth)
     : theApiRoot(aApiRoot)
-    , theAuth(aAuth) {
+    , thePath("/api/v1/namespaces/_/actions/")
+    , theQuery("blocking=true&result=true")
+    , theAuth("Basic " + aAuth) {
   if (aApiRoot.empty()) {
     throw std::runtime_error("Invalid empty OpenWhisk API root");
   }
@@ -50,24 +52,42 @@ Invoker::Invoker(const std::string& aApiRoot, const std::string& aAuth)
   VLOG(1) << "created an invoker towards " << aApiRoot;
 }
 
-std::string Invoker::
-            operator()(const std::string&                       aName,
-           const std::map<std::string, std::string> aParams) const {
-  rest::Client myClient(theApiRoot + "/v1/namespaces/_/actions/" + aName +
-                        "?blocking=true&result=true");
-  auto         myValue  = web::json::value::object();
-  auto&        myObject = myValue.as_object();
-  for (const auto& elem : aParams) {
-    myObject.at(elem.first) = web::json::value(elem.second);
-  }
-  const auto ret = myClient.post(myValue);
+std::pair<bool, std::string> Invoker::
+                             operator()(const std::string&                       aName,
+           const std::map<std::string, std::string> aParams) const noexcept {
+  std::pair<bool, std::string> ret({false, std::string()});
+  try {
+    rest::Client myClient(theApiRoot, true);
+    myClient.changeHeader("Authorization", theAuth);
+    auto  myValue  = web::json::value::object();
+    auto& myObject = myValue.as_object();
+    for (const auto& elem : aParams) {
+      myObject[elem.first] = web::json::value(elem.second);
+    }
+    const auto res = myClient.post(myValue, thePath + aName, theQuery);
 
-  if (ret.first != web::http::status_codes::OK or
-      not ret.second.has_string_field("payload")) {
-    return std::string();
-  }
+    if (res.first != web::http::status_codes::OK) {
+      ret.second = "unexpected HTTP response: " + std::to_string(res.first);
 
-  return ret.second.at("payload").as_string();
+    } else if (not res.second.has_string_field("payload")) {
+      ret.second = "unexpected body: payload field missing";
+
+    } else {
+      ret = std::make_pair(true, res.second.at("payload").as_string());
+    }
+
+  } catch (const std::exception& aErr) {
+    ret.second = std::string("error encountered: ") + aErr.what();
+
+  } catch (...) {
+    ret.second = "unknown error encountered";
+  }
+  return ret;
+}
+
+std::pair<bool, std::string> Invoker::operator()(const std::string& aName) const
+    noexcept {
+  return this->operator()(aName, {});
 }
 
 } // namespace wsk
