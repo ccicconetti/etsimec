@@ -56,6 +56,14 @@ class Command
   virtual ~Command() {
   }
 
+  const std::string& apiRoot() {
+    return theApiRoot;
+  }
+
+  const std::string& auth() {
+    return thePath;
+  }
+
  protected:
   const std::string theApiRoot;
   const std::string thePath;
