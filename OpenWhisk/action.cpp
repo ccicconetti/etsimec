@@ -32,6 +32,10 @@ SOFTWARE.
 namespace uiiit {
 namespace wsk {
 
+ActionKey Action::key() const {
+  return ActionKey{theSpace, theName};
+}
+
 Action::Action(const std::string& aSpace,
                const std::string& aName,
                const uint64_t     aUpdated,
@@ -43,13 +47,33 @@ Action::Action(const std::string& aSpace,
   // noop
 }
 
-ActionKey Action::key() const {
-  return ActionKey{theSpace, theName};
+bool Action::operator==(const Action& aOther) const {
+  return theSpace == aOther.theSpace and theName == aOther.theName and
+         theUpdated == aOther.theUpdated and theVersion == aOther.theVersion;
 }
 
 std::string Action::toString() const {
   return key().toString() + ", updated " + std::to_string(theUpdated) +
          ", version " + theVersion;
+}
+
+bool sameKeys(const std::map<ActionKey, Action>& aLhs,
+              const std::map<ActionKey, Action>& aRhs) {
+  // short-circuit
+  if (aLhs.size() != aRhs.size()) {
+    return false;
+  }
+
+  // long way
+  std::set<std::string> myLhs;
+  std::set<std::string> myRhs;
+  for (const auto& elem : aLhs) {
+    myLhs.emplace(elem.first.toString());
+  }
+  for (const auto& elem : aRhs) {
+    myRhs.emplace(elem.first.toString());
+  }
+  return myLhs == myRhs;
 }
 
 } // namespace wsk

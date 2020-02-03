@@ -30,6 +30,7 @@ SOFTWARE.
 #pragma once
 
 #include <map>
+#include <set>
 #include <string>
 
 namespace uiiit {
@@ -75,6 +76,8 @@ class Action
                   const uint64_t     aUpdated,
                   const std::string& aVersion);
 
+  bool operator==(const Action& aOther) const;
+
   const std::string& space() const {
     return theSpace;
   }
@@ -102,6 +105,10 @@ class Action
   const uint64_t    theUpdated;
   const std::string theVersion;
 };
+
+  //! \return true if the two maps have the same keys.
+  bool sameKeys(const std::map<ActionKey, Action>& aLhs, const std::map<ActionKey, Action>& aRhs);
+
 
 } // namespace wsk
 } // namespace uiiit
