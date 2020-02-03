@@ -27,54 +27,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
+#include "command.h"
 
-#include "OpenWhisk/command.h"
+#include <glog/logging.h>
 
-#include <map>
-#include <string>
+#include <stdexcept>
 
 namespace uiiit {
 namespace wsk {
 
-/**
- * Invoke an action on an OpenWhisk server.
- */
-class Invoker final : public Command
-{
- public:
-  /**
-   * \param aApiRoot The URI of the OpenWhisk server.
-   *
-   * \param aAuth The authorization token.
-   *
-   * \throw std::runtime_error if the URI or token are empty.
-   */
-  explicit Invoker(const std::string& aApiRoot, const std::string& aAuth);
-
-  /**
-   * Invoke a blocking action with result, which is returned in case
-   * of success.
-   *
-   * \param aName The action name.
-   *
-   * \param aParams The parameters.
-   *
-   * \return a pair containing a flag on whether the action was successful or
-   * not and a string representing an explanation of the error (if not
-   * successful) or the result of the action (if successful).
-   */
-  std::pair<bool, std::string>
-  operator()(const std::string&                       aName,
-             const std::map<std::string, std::string> aParams) const noexcept;
-
-  //! Invoke without parameters.
-  std::pair<bool, std::string> operator()(const std::string& aName) const
-      noexcept;
-
- private:
-  const std::string theQuery;
-};
+Command::Command(const std::string& aApiRoot, const std::string& aAuth)
+    : theApiRoot(aApiRoot)
+    , thePath("/api/v1/namespaces/_/actions")
+    , theAuth("Basic " + aAuth) {
+  if (aApiRoot.empty()) {
+    throw std::runtime_error("Invalid empty OpenWhisk API root");
+  }
+  if (aAuth.empty()) {
+    throw std::runtime_error("Invalid empty OpenWhisk auth token");
+  }
+  VLOG(1) << "created an OpenWhisk command proxy towards " << aApiRoot;
+  VLOG(2) << "authentication token: " << aAuth;
+}
 
 } // namespace wsk
 } // namespace uiiit

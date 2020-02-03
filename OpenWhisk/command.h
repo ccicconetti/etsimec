@@ -29,19 +29,20 @@ SOFTWARE.
 
 #pragma once
 
-#include "OpenWhisk/command.h"
+#include "Support/macros.h"
 
-#include <map>
 #include <string>
 
 namespace uiiit {
 namespace wsk {
 
 /**
- * Invoke an action on an OpenWhisk server.
+ * Generic OpenWhisk command.
  */
-class Invoker final : public Command
+class Command
 {
+  NONCOPYABLE_NONMOVABLE(Command);
+
  public:
   /**
    * \param aApiRoot The URI of the OpenWhisk server.
@@ -50,30 +51,15 @@ class Invoker final : public Command
    *
    * \throw std::runtime_error if the URI or token are empty.
    */
-  explicit Invoker(const std::string& aApiRoot, const std::string& aAuth);
+  explicit Command(const std::string& aApiRoot, const std::string& aAuth);
 
-  /**
-   * Invoke a blocking action with result, which is returned in case
-   * of success.
-   *
-   * \param aName The action name.
-   *
-   * \param aParams The parameters.
-   *
-   * \return a pair containing a flag on whether the action was successful or
-   * not and a string representing an explanation of the error (if not
-   * successful) or the result of the action (if successful).
-   */
-  std::pair<bool, std::string>
-  operator()(const std::string&                       aName,
-             const std::map<std::string, std::string> aParams) const noexcept;
+  virtual ~Command() {
+  }
 
-  //! Invoke without parameters.
-  std::pair<bool, std::string> operator()(const std::string& aName) const
-      noexcept;
-
- private:
-  const std::string theQuery;
+ protected:
+  const std::string theApiRoot;
+  const std::string thePath;
+  const std::string theAuth;
 };
 
 } // namespace wsk

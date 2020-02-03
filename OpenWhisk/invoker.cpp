@@ -39,17 +39,8 @@ namespace uiiit {
 namespace wsk {
 
 Invoker::Invoker(const std::string& aApiRoot, const std::string& aAuth)
-    : theApiRoot(aApiRoot)
-    , thePath("/api/v1/namespaces/_/actions/")
-    , theQuery("blocking=true&result=true")
-    , theAuth("Basic " + aAuth) {
-  if (aApiRoot.empty()) {
-    throw std::runtime_error("Invalid empty OpenWhisk API root");
-  }
-  if (aAuth.empty()) {
-    throw std::runtime_error("Invalid empty OpenWhisk auth token");
-  }
-  VLOG(1) << "created an invoker towards " << aApiRoot;
+    : Command(aApiRoot, aAuth)
+    , theQuery("blocking=true&result=true") {
 }
 
 std::pair<bool, std::string> Invoker::
@@ -64,7 +55,7 @@ std::pair<bool, std::string> Invoker::
     for (const auto& elem : aParams) {
       myObject[elem.first] = web::json::value(elem.second);
     }
-    const auto res = myClient.post(myValue, thePath + aName, theQuery);
+    const auto res = myClient.post(myValue, thePath + "/" + aName, theQuery);
 
     if (res.first != web::http::status_codes::OK) {
       ret.second = "unexpected HTTP response: " + std::to_string(res.first);
