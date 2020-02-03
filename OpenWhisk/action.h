@@ -93,6 +93,9 @@ class Action
   //! \return the key for this action.
   ActionKey key() const;
 
+  //! \return a string representing the action (single-line, without cr).
+  std::string toString() const;
+
  protected:
   const std::string theSpace;
   const std::string theName;

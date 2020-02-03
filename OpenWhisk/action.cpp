@@ -47,5 +47,10 @@ ActionKey Action::key() const {
   return ActionKey{theSpace, theName};
 }
 
+std::string Action::toString() const {
+  return key().toString() + ", updated " + std::to_string(theUpdated) +
+         ", version " + theVersion;
+}
+
 } // namespace wsk
 } // namespace uiiit
