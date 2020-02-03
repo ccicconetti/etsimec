@@ -27,12 +27,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "OpenWhisk/invoker.h"
-
-#include "wskutils.h"
-
-#include "gtest/gtest.h"
-
 #include <glog/logging.h>
 
 #include <cstdlib>
@@ -40,34 +34,46 @@ SOFTWARE.
 namespace uiiit {
 namespace wsk {
 
-struct TestInvoker : public ::testing::Test {};
+/*
+ *
+ * It is assumed that a function called 'hello' exists
+ * on the given OpenWhisk server, whose URL and authorization
+ * token are given in environment variables UIIITREST_APIHOST
+ * and UIIITREST_AUTH
 
-TEST_F(TestInvoker, test_ctor) {
-  ASSERT_THROW(Invoker("", "X"), std::runtime_error);
-  ASSERT_THROW(Invoker("X", ""), std::runtime_error);
-  ASSERT_NO_THROW(Invoker("X", "X"));
+function main (params) {
+  var name = params.name || '<name unknown>'
+  var surname = params.surname || '<surname unknown>'
+  return { payload: 'Hello, Mr./Ms. ' + name + ' ' + surname + '!' }
 }
 
-TEST_F(TestInvoker, test_invoke_unreachable) {
-  Invoker myInvoker("https://127.0.0.1:4", "invalid-token");
+ * Without the environment variables set, the test is not executed.
+ */
+class WskEnv
+{
+ public:
+  static bool ready() {
+    if (getenv("UIIITREST_APIHOST") == nullptr or
+        getenv("UIIITREST_AUTH") == nullptr) {
+      LOG(INFO) << "test not executed, must configure UIIITREST_APIHOST and "
+                   "UIIITREST_AUTH";
+      return false;
+    }
+    return true;
+  }
 
-  const auto res = myInvoker("hello");
+  static std::string apiHost() {
+    return getenv("UIIITREST_APIHOST");
+  }
+  static std::string auth() {
+    return getenv("UIIITREST_AUTH");
+  }
+};
 
-  ASSERT_FALSE(res.first);
-  LOG(INFO) << res.second;
-}
-
-TEST_F(TestInvoker, test_invoke) {
-  SKIP_IF_WSK_NOT_READY
-
-  Invoker myInvoker(WskEnv::apiHost(), WskEnv::auth());
-
-  const auto res = myInvoker("uiiitrest-test-invoke",
-                             {{"name", "Mickey"}, {"surname", "Mouse"}});
-
-  ASSERT_TRUE(res.first);
-  ASSERT_EQ("Hello, Mr./Ms. Mickey Mouse!", res.second);
-}
+#define SKIP_IF_WSK_NOT_READY                                                  \
+  if (not WskEnv::ready()) {                                                   \
+    return;                                                                    \
+  }
 
 } // namespace wsk
 } // namespace uiiit
