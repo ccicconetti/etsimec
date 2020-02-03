@@ -29,6 +29,7 @@ add_library(testlib SHARED
   ${CMAKE_CURRENT_SOURCE_DIR}/testetsimec.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/testinvoker.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/testgrpcueapplcmproxy.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/testlister.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/teststaticueapplcmproxy.cpp
 )
 
