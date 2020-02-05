@@ -44,14 +44,15 @@ Invoker::Invoker(const std::string& aApiRoot, const std::string& aAuth)
 }
 
 std::pair<bool, std::string> Invoker::
-                             operator()(const std::string& aName, const std::string& aParams) const
-    noexcept {
+                             operator()(const std::string& aName,
+           const std::string& aSpace,
+           const std::string& aParams) const noexcept {
   std::pair<bool, std::string> ret({false, std::string()});
   try {
     rest::Client myClient(theApiRoot, true);
     myClient.changeHeader("Authorization", theAuth);
     const auto res = myClient.post(
-        web::json::value::parse(aParams), thePath + "/" + aName, theQuery);
+        web::json::value::parse(aParams), thePath + (aSpace.empty() ? "_" : aSpace) + "/actions/" + aName, theQuery);
 
     if (res.first != web::http::status_codes::OK) {
       ret.second = "unexpected HTTP response: " + std::to_string(res.first);
@@ -73,6 +74,7 @@ std::pair<bool, std::string> Invoker::
 }
 
 std::pair<bool, std::string> Invoker::operator()(const std::string& aName,
+                                                 const std::string& aSpace,
                                                  const Parameters aParams) const
     noexcept {
   auto  myValue  = web::json::value::object();
@@ -80,12 +82,12 @@ std::pair<bool, std::string> Invoker::operator()(const std::string& aName,
   for (const auto& elem : aParams) {
     myObject[elem.first] = web::json::value(elem.second);
   }
-  return this->operator()(aName, myValue.serialize());
+  return this->operator()(aName, aSpace, myValue.serialize());
 }
 
-std::pair<bool, std::string> Invoker::operator()(const std::string& aName) const
-    noexcept {
-  return this->operator()(aName, Parameters());
+std::pair<bool, std::string> Invoker::
+                             operator()(const std::string& aName, const std::string& aSpace) const noexcept {
+  return this->operator()(aName, aSpace, Parameters());
 }
 
 } // namespace wsk

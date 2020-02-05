@@ -38,7 +38,7 @@ namespace wsk {
 
 Command::Command(const std::string& aApiRoot, const std::string& aAuth)
     : theApiRoot(aApiRoot)
-    , thePath("/api/v1/namespaces/_/actions")
+    , thePath("/api/v1/namespaces/")
     , theAuth("Basic " + aAuth) {
   if (aApiRoot.empty()) {
     throw std::runtime_error("Invalid empty OpenWhisk API root");

@@ -52,7 +52,7 @@ std::map<ActionKey, Action> Lister::operator()(const size_t aLimit,
 
   rest::Client myClient(theApiRoot, true);
   myClient.changeHeader("Authorization", theAuth);
-  const auto res      = myClient.get(thePath, makeQuery(aLimit, aSkip));
+  const auto res      = myClient.get(thePath + "_/actions/", makeQuery(aLimit, aSkip));
 
   if (res.first != web::http::status_codes::OK) {
     throw std::runtime_error("unexpected HTTP response: " +

@@ -51,7 +51,7 @@ TEST_F(TestInvoker, test_ctor) {
 TEST_F(TestInvoker, test_invoke_unreachable) {
   Invoker myInvoker("https://127.0.0.1:4", "invalid-token");
 
-  const auto res = myInvoker("hello");
+  const auto res = myInvoker("hello", "");
 
   ASSERT_FALSE(res.first);
   LOG(INFO) << res.second;
@@ -62,11 +62,25 @@ TEST_F(TestInvoker, test_invoke_map) {
 
   Invoker myInvoker(WskEnv::apiHost(), WskEnv::auth());
 
-  const auto res = myInvoker("uiiitrest-test-invoke",
-                             {{"name", "Mickey"}, {"surname", "Mouse"}});
+  auto res = myInvoker(
+      "uiiitrest-test-invoke", "", {{"name", "Mickey"}, {"surname", "Mouse"}});
 
   ASSERT_TRUE(res.first);
   ASSERT_EQ("Hello, Mr./Ms. Mickey Mouse!", res.second);
+
+  res = myInvoker("uiiitrest-test-invoke",
+                  "guest",
+                  {{"name", "Mickey"}, {"surname", "Mouse"}});
+
+  ASSERT_TRUE(res.first);
+  ASSERT_EQ("Hello, Mr./Ms. Mickey Mouse!", res.second);
+
+  res = myInvoker("uiiitrest-test-invoke",
+                  "non-existing-namespace",
+                  {{"name", "Mickey"}, {"surname", "Mouse"}});
+
+  ASSERT_FALSE(res.first);
+  LOG(INFO) << res.second;
 }
 
 TEST_F(TestInvoker, test_invoke_json) {
@@ -75,6 +89,7 @@ TEST_F(TestInvoker, test_invoke_json) {
   Invoker myInvoker(WskEnv::apiHost(), WskEnv::auth());
 
   const auto res = myInvoker("uiiitrest-test-invoke",
+                             "",
                              "{\"name\": \"Mickey\", \"surname\": \"Mouse\"}");
 
   ASSERT_TRUE(res.first);
@@ -86,7 +101,7 @@ TEST_F(TestInvoker, test_invoke_no_params) {
 
   Invoker myInvoker(WskEnv::apiHost(), WskEnv::auth());
 
-  const auto res = myInvoker("uiiitrest-test-invoke");
+  const auto res = myInvoker("uiiitrest-test-invoke", "");
 
   ASSERT_TRUE(res.first);
   ASSERT_EQ("Hello, Mr./Ms. <name unknown> <surname unknown>!", res.second);

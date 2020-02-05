@@ -43,7 +43,7 @@ namespace wsk {
 class Invoker final : public Command
 {
  public:
-     using Parameters = std::map<std::string, std::string>;
+  using Parameters = std::map<std::string, std::string>;
 
   /**
    * \param aApiRoot The URI of the OpenWhisk server.
@@ -60,23 +60,28 @@ class Invoker final : public Command
    *
    * \param aName The action name.
    *
+   * \param aSpace The action namespace (empty means all).
+   *
    * \param aParams The parameters.
    *
    * \return a pair containing a flag on whether the action was successful or
    * not and a string representing an explanation of the error (if not
    * successful) or the result of the action (if successful).
    */
-  std::pair<bool, std::string>
-  operator()(const std::string&                       aName,
-             const Parameters aParams) const noexcept;
+  std::pair<bool, std::string> operator()(const std::string& aName,
+                                          const std::string& aSpace,
+                                          const Parameters   aParams) const
+      noexcept;
 
   //! Invoke with parameters JSON-encoded.
   std::pair<bool, std::string> operator()(const std::string& aName,
+                                          const std::string& aSpace,
                                           const std::string& aParams) const
       noexcept;
 
   //! Invoke without parameters.
-  std::pair<bool, std::string> operator()(const std::string& aName) const
+  std::pair<bool, std::string>
+  operator()(const std::string& aName, const std::string& aSpace) const
       noexcept;
 
  private:
