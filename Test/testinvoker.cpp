@@ -57,7 +57,7 @@ TEST_F(TestInvoker, test_invoke_unreachable) {
   LOG(INFO) << res.second;
 }
 
-TEST_F(TestInvoker, test_invoke) {
+TEST_F(TestInvoker, test_invoke_map) {
   SKIP_IF_WSK_NOT_READY
 
   Invoker myInvoker(WskEnv::apiHost(), WskEnv::auth());
@@ -67,6 +67,29 @@ TEST_F(TestInvoker, test_invoke) {
 
   ASSERT_TRUE(res.first);
   ASSERT_EQ("Hello, Mr./Ms. Mickey Mouse!", res.second);
+}
+
+TEST_F(TestInvoker, test_invoke_json) {
+  SKIP_IF_WSK_NOT_READY
+
+  Invoker myInvoker(WskEnv::apiHost(), WskEnv::auth());
+
+  const auto res = myInvoker("uiiitrest-test-invoke",
+                             "{\"name\": \"Mickey\", \"surname\": \"Mouse\"}");
+
+  ASSERT_TRUE(res.first);
+  ASSERT_EQ("Hello, Mr./Ms. Mickey Mouse!", res.second);
+}
+
+TEST_F(TestInvoker, test_invoke_no_params) {
+  SKIP_IF_WSK_NOT_READY
+
+  Invoker myInvoker(WskEnv::apiHost(), WskEnv::auth());
+
+  const auto res = myInvoker("uiiitrest-test-invoke");
+
+  ASSERT_TRUE(res.first);
+  ASSERT_EQ("Hello, Mr./Ms. <name unknown> <surname unknown>!", res.second);
 }
 
 } // namespace wsk
