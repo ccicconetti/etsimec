@@ -51,8 +51,10 @@ std::pair<bool, std::string> Invoker::
   try {
     rest::Client myClient(theApiRoot, true);
     myClient.changeHeader("Authorization", theAuth);
-    const auto res = myClient.post(
-        web::json::value::parse(aParams), thePath + (aSpace.empty() ? "_" : aSpace) + "/actions/" + aName, theQuery);
+    const auto res = myClient.post(web::json::value::parse(aParams),
+                                   thePath + (aSpace.empty() ? "_" : aSpace) +
+                                       "/actions/" + aName,
+                                   theQuery);
 
     if (res.first != web::http::status_codes::OK) {
       ret.second = "unexpected HTTP response: " + std::to_string(res.first);
