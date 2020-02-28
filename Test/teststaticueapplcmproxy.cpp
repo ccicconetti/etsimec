@@ -73,7 +73,11 @@ struct TestStaticUeAppLcmProxy : public ::testing::Test {
 };
 
 TEST_F(TestStaticUeAppLcmProxy, test_appcontextmanager_notifications) {
-  const std::string myLocalHost = "127.0.0.1";
+  // depending on OS and system configuration the "localhost" could
+  // be depected as IPv4 (127.0.0.1) or IPv6 (::1): we start by assuming
+  // IPv4, then fall back on IPv6 upon first failure (if any)
+  std::string myLocalHost = "127.0.0.1";  // IPv4
+
   const std::string myNotificationUri = "http://localhost:10001";
   theProxy.start();
   AppContextManager myAppContextManager(myNotificationUri, theProxyUri);
@@ -113,6 +117,9 @@ TEST_F(TestStaticUeAppLcmProxy, test_appcontextmanager_notifications) {
   ASSERT_EQ("default", myAppContextManager.referenceUri(ret.first));
   myAppUeIDs.emplace(ret.first, &myAppContextManager);
   ASSERT_EQ(1u, theProxy.numContexts());
+  if (not context(myLocalHost, "name", "default")) {
+    myLocalHost = "::1"; // IPv6
+  }
   ASSERT_TRUE(context(myLocalHost, "name", "default"));
 
   // change the default router
