@@ -73,6 +73,7 @@ struct TestStaticUeAppLcmProxy : public ::testing::Test {
 };
 
 TEST_F(TestStaticUeAppLcmProxy, test_appcontextmanager_notifications) {
+  const std::string myLocalHost = "127.0.0.1";
   const std::string myNotificationUri = "http://localhost:10001";
   theProxy.start();
   AppContextManager myAppContextManager(myNotificationUri, theProxyUri);
@@ -112,13 +113,13 @@ TEST_F(TestStaticUeAppLcmProxy, test_appcontextmanager_notifications) {
   ASSERT_EQ("default", myAppContextManager.referenceUri(ret.first));
   myAppUeIDs.emplace(ret.first, &myAppContextManager);
   ASSERT_EQ(1u, theProxy.numContexts());
-  ASSERT_TRUE(context("::1", "name", "default"));
+  ASSERT_TRUE(context(myLocalHost, "name", "default"));
 
   // change the default router
   theProxy.associateAddress("", "name", "another-default");
 
   ASSERT_EQ("another-default", theProxy.edgeRouter("any-address", "name"));
-  ASSERT_TRUE(context("::1", "name", "another-default"));
+  ASSERT_TRUE(context(myLocalHost, "name", "another-default"));
 
   // a notification should arrive to the app context manager
   ASSERT_TRUE(support::waitFor<std::string>(
@@ -152,7 +153,7 @@ TEST_F(TestStaticUeAppLcmProxy, test_appcontextmanager_notifications) {
   }
 
   // now change the router a the actual clients with application contexts
-  theProxy.associateAddress("::1", "name", "moon");
+  theProxy.associateAddress(myLocalHost, "name", "moon");
 
   // the edge router should be update for all
   const auto myCheckAll = [&](const std::string& aExpected) {
@@ -168,7 +169,7 @@ TEST_F(TestStaticUeAppLcmProxy, test_appcontextmanager_notifications) {
   ASSERT_EQ(myAppUeIDs.size(), theProxy.numContexts());
 
   // remove association from the address of all contexts so far
-  theProxy.removeAddress("::1", "name");
+  theProxy.removeAddress(myLocalHost, "name");
 
   // all applications should fall back on the default router
   ASSERT_TRUE(support::waitFor<bool>(
