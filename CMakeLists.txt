@@ -60,4 +60,11 @@ add_subdirectory(rest/support/RpcSupport)
 add_subdirectory(EtsiMec)
 add_subdirectory(Executables)
 add_subdirectory(OpenWhisk)
-add_subdirectory(Test)
+
+# unit tests
+if (${CMAKE_BUILD_TYPE} STREQUAL "debug")
+  add_subdirectory(Test)
+  set(skip_google_test TRUE)
+  add_subdirectory(rest/Test)
+  add_subdirectory(rest/support/Test)
+endif()
