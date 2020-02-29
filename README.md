@@ -23,31 +23,23 @@ The current version of this library only support Mx2.
 
 ## Build instructions
 
-First, make sure you have [CMake](https://cmake.org/) (version >= 3.2), a recent C++ compiler and all the dependencies installed:
-
-- [glog](https://github.com/google/glog)
-- [Boost](https://www.boost.org/)
-- [gRPC](https://grpc.io/)
-- [protobuf](https://developers.google.com/protocol-buffers/)
-
-Very likely you can find packaged versions in your system's package repository.
-Make sure you are installing the development version of the packages, which also include header files.
-gRPC is better built from source, and it may automatically download and compile protobuf too (recommended).
-
-Note that [gmock](https://github.com/google/googlemock) is also needed to compile the unit tests but, if everything goes right, it will be downloaded automatically by CMake (needless to say: you do need a working Internet connection for this step).
+1. Clone the git repository:
 
 ```
-git clone git@github.com:ccicconetti/etsimec.git
+git clone https://github.com/ccicconetti/etsimec.git
 git submodule update --init --recursive
 ```
 
-Once everything is ready (assuming `clang++` is your compiler):
+2. Install dependencies (see below)
+
+3. Compile (assuming `g++` is your preferred compiler):
 
 ```
-cd build/debug
-../build.sh clang++
+cd etsimec/build/debug
+../build.sh g++
 make
 ```
+Note that [gmock](https://github.com/google/googlemock) is also needed to compile the unit tests but, if everything goes right, it will be downloaded automatically by CMake (needless to say: you do need a working Internet connection for this step).
 
 This will compile the full build tree consisting of:
 
@@ -59,11 +51,36 @@ If you want to compile with compiler optimisations and no assertions:
 
 ```
 cd build/release
-../build.sh clang++
+../build.sh g++
 make
 ```
 
 The unit tests will not be compiled (gmock will not be even downloaded).
+
+### Dependencies
+
+Compiling the software requires the following:
+
+- recent C++ compiler, tested with clang-10 and cc-7
+- [CMake](https://cmake.org/) >= 3.2
+- [glog](https://github.com/google/glog), tested with 0.3.5
+- [Boost](https://www.boost.org/), tested with 1.65
+- [gRPC](https://grpc.io/), tested with 1.27.1
+- [protobuf](https://developers.google.com/protocol-buffers/), tested with version shipped with gRPC 1.27.1
+
+With Mac OS X this should be as simple as installing everything via [Homebrew](https://brew.sh/):
+
+```
+brew install grpc protobuf cpprestsdk boost glog
+```
+
+On Linux this is a bit more complicated. A script that downloads and installs all dependencies can be found in the repo, which assumes that you are using `Ubuntu 18.04 (Bionic)`. Note that the script requires root privileges, it will change the system default CMake version to 3.16.1, and it will install headers and libraries in the system path `/usr/local`. To run it just hit:
+
+```
+[sudo] etsimec/utils/build_deps.sh
+```
+
+from the same directory where you have cloned the repository.
 
 ## How to use in your code
 

@@ -32,7 +32,7 @@ else
   rm cmake-linux.sh
 
   if [ "$(cmake --version | head -n 1)" != "cmake version 3.16.1" ] ; then
-    echo "CMake installation failed"
+    echo "installation failed"
     exit 1
   fi
 fi
@@ -61,7 +61,7 @@ else
   popd
 
   if [ ! -r /usr/local/lib/libgrpc++.so.1.27.2 ] ; then
-    echo "gRPC installation failed"
+    echo "installation failed"
     exit 1
   fi
 fi
@@ -85,7 +85,7 @@ else
   popd
 
   if [ ! -r /usr/local/lib/libcpprest.so.2.10 ] ; then
-    echo "gRPC installation failed"
+    echo "installation failed"
     exit 1
   fi
 fi
