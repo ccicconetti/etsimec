@@ -27,6 +27,7 @@ The current version of this library only support Mx2.
 
 ```
 git clone https://github.com/ccicconetti/etsimec.git
+cd etsimec
 git submodule update --init --recursive
 ```
 
@@ -35,7 +36,7 @@ git submodule update --init --recursive
 3. Compile (assuming `g++` is your preferred compiler):
 
 ```
-cd etsimec/build/debug
+cd build/debug
 ../build.sh g++
 make
 ```
@@ -74,10 +75,10 @@ With Mac OS X this should be as simple as installing everything via [Homebrew](h
 brew install grpc protobuf cpprestsdk boost glog
 ```
 
-On Linux this is a bit more complicated. A script that downloads and installs all dependencies can be found in the repo, which assumes that you are using `Ubuntu 18.04 (Bionic)`. Note that the script requires root privileges, it will change the system default CMake version to 3.16.1, and it will install headers and libraries in the system path `/usr/local`. To run it just hit:
+On Linux this is a bit more complicated. A script that downloads and installs all dependencies can be found in the repo, which assumes that you are using `Ubuntu 18.04 (Bionic)`. Note that the script requires root privileges, it will change the system default CMake version to 3.16.1, and it will install headers and libraries in the system path `/usr/local`. To run it just hit (from within the cloned `etsimec` repository):
 
 ```
-[sudo] etsimec/utils/build_deps.sh
+[sudo] utils/build_deps.sh
 ```
 
 from the same directory where you have cloned the repository.
