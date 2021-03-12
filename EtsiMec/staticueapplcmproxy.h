@@ -153,7 +153,7 @@ class StaticUeAppLcmProxy : public UeAppLcmProxy
    * \throw std::runtime_error if aAddress or aAppName are empty.
    */
   std::string edgeRouter(const std::string& aAddress,
-                         const std::string  aAppName) const;
+                         const std::string& aAppName) const;
 
   //! \return the address associations table.
   std::list<TableTuple> addressAssociations() const;

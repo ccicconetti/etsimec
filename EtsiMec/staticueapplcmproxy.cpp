@@ -76,10 +76,10 @@ void StaticUeAppLcmProxy::associateAddress(const std::string& aAddress,
       continue;
     }
 
-    const auto it = find(elem.second.theClientAddress, elem.second.theAppName);
-    assert(it != theTable.end());
+    const auto jt = find(elem.second.theClientAddress, elem.second.theAppName);
+    assert(jt != theTable.end());
 
-    if (it->second != elem.second.theEdgeRouterEndpoint) {
+    if (jt->second != elem.second.theEdgeRouterEndpoint) {
       myNotifications.emplace_back(std::make_tuple(
           elem.second.theCallbackReference, aEdgeRouter, elem.first));
       elem.second.theEdgeRouterEndpoint = aEdgeRouter;
@@ -114,7 +114,7 @@ void StaticUeAppLcmProxy::removeAddress(const std::string& aAddress,
       continue;
     }
 
-    const auto it = find(elem.second.theClientAddress, elem.second.theAppName);
+    const auto jt = find(elem.second.theClientAddress, elem.second.theAppName);
 
     // it may happen that due the removal of an entry there are no more entries
     // matching a given pair <address, app name>: in this case we simply log
@@ -122,17 +122,17 @@ void StaticUeAppLcmProxy::removeAddress(const std::string& aAddress,
     // what to notify), but we set the edge router in the descriptor to an
     // empty string so that if ever the pair <address, app name> is given a
     // valid target, at least then the edge client gets notified
-    if (it == theTable.end()) {
+    if (jt == theTable.end()) {
       LOG(ERROR) << "<" << elem.second.theClientAddress << ", "
                  << elem.second.theAppName
                  << "> has no valid target edge router";
       elem.second.theEdgeRouterEndpoint = "";
 
-    } else if (it->second != elem.second.theEdgeRouterEndpoint) {
-      assert(not it->second.empty());
-      elem.second.theEdgeRouterEndpoint = it->second;
+    } else if (jt->second != elem.second.theEdgeRouterEndpoint) {
+      assert(not jt->second.empty());
+      elem.second.theEdgeRouterEndpoint = jt->second;
       myNotifications.emplace_back(std::make_tuple(
-          elem.second.theCallbackReference, it->second, elem.first));
+          elem.second.theCallbackReference, jt->second, elem.first));
     }
   }
   myLock.unlock();
@@ -150,7 +150,7 @@ size_t StaticUeAppLcmProxy::numContexts() const {
 }
 
 std::string StaticUeAppLcmProxy::edgeRouter(const std::string& aAddress,
-                                            const std::string  aAppName) const {
+                                            const std::string& aAppName) const {
   if (aAddress.empty()) {
     throw std::runtime_error("Empty edge client address");
   }

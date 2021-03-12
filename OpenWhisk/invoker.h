@@ -68,21 +68,21 @@ class Invoker final : public Command
    * not and a string representing an explanation of the error (if not
    * successful) or the result of the action (if successful).
    */
-  std::pair<bool, std::string> operator()(const std::string& aName,
-                                          const std::string& aSpace,
-                                          const Parameters   aParams) const
-      noexcept;
+  std::pair<bool, std::string>
+  operator()(const std::string& aName,
+             const std::string& aSpace,
+             const Parameters&  aParams) const noexcept;
 
   //! Invoke with parameters JSON-encoded.
-  std::pair<bool, std::string> operator()(const std::string& aName,
-                                          const std::string& aSpace,
-                                          const std::string& aParams) const
-      noexcept;
+  std::pair<bool, std::string>
+  operator()(const std::string& aName,
+             const std::string& aSpace,
+             const std::string& aParams) const noexcept;
 
   //! Invoke without parameters.
   std::pair<bool, std::string>
-  operator()(const std::string& aName, const std::string& aSpace) const
-      noexcept;
+  operator()(const std::string& aName,
+             const std::string& aSpace) const noexcept;
 
  private:
   const std::string theQuery;

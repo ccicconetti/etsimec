@@ -43,10 +43,10 @@ Invoker::Invoker(const std::string& aApiRoot, const std::string& aAuth)
     , theQuery("blocking=true&result=true") {
 }
 
-std::pair<bool, std::string> Invoker::
-                             operator()(const std::string& aName,
-           const std::string& aSpace,
-           const std::string& aParams) const noexcept {
+std::pair<bool, std::string>
+Invoker::operator()(const std::string& aName,
+                    const std::string& aSpace,
+                    const std::string& aParams) const noexcept {
   std::pair<bool, std::string> ret({false, std::string()});
   try {
     rest::Client myClient(theApiRoot, true);
@@ -75,10 +75,10 @@ std::pair<bool, std::string> Invoker::
   return ret;
 }
 
-std::pair<bool, std::string> Invoker::operator()(const std::string& aName,
-                                                 const std::string& aSpace,
-                                                 const Parameters aParams) const
-    noexcept {
+std::pair<bool, std::string>
+Invoker::operator()(const std::string& aName,
+                    const std::string& aSpace,
+                    const Parameters&  aParams) const noexcept {
   auto  myValue  = web::json::value::object();
   auto& myObject = myValue.as_object();
   for (const auto& elem : aParams) {
@@ -87,8 +87,9 @@ std::pair<bool, std::string> Invoker::operator()(const std::string& aName,
   return this->operator()(aName, aSpace, myValue.serialize());
 }
 
-std::pair<bool, std::string> Invoker::
-                             operator()(const std::string& aName, const std::string& aSpace) const noexcept {
+std::pair<bool, std::string>
+Invoker::operator()(const std::string& aName,
+                    const std::string& aSpace) const noexcept {
   return this->operator()(aName, aSpace, Parameters());
 }
 
