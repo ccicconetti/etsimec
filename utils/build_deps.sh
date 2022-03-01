@@ -24,14 +24,14 @@ apt install -y \
 echo "**********************************************************************"
 echo "INSTALLING CMAKE"
 
-if [ "$(cmake --version | head -n 1)" == "cmake version 3.16.1" ] ; then
+if [ "$(cmake --version | head -n 1)" == "cmake version 3.22.2" ] ; then
   echo "it seems it is already installed, skipping"
 else
-  wget -q -O cmake-linux.sh https://github.com/Kitware/CMake/releases/download/v3.16.1/cmake-3.16.1-Linux-x86_64.sh
+  wget -q -O cmake-linux.sh https://github.com/Kitware/CMake/releases/download/v3.22.2/cmake-3.22.2-linux-x86_64.sh
   sh cmake-linux.sh -- --skip-license --prefix=/usr
   rm cmake-linux.sh
 
-  if [ "$(cmake --version | head -n 1)" != "cmake version 3.16.1" ] ; then
+  if [ "$(cmake --version | head -n 1)" != "cmake version 3.22.2" ] ; then
     echo "installation failed"
     exit 1
   fi
@@ -40,12 +40,12 @@ fi
 echo "**********************************************************************"
 echo "INSTALLING GRPC"
 
-if [ -r /usr/local/lib/libgrpc++.so.1.27.2 ] ; then
+if [ -r /usr/local/lib/libgrpc++.so.1.44.0 ] ; then
   echo "it seems it is already installed, skipping"
 else
   git clone https://github.com/grpc/grpc
   pushd grpc
-  git checkout v1.27.2
+  git checkout v1.44.0
   git submodule update --init --recursive
   mkdir -p "cmake/build"
   pushd "cmake/build"
@@ -60,7 +60,7 @@ else
   popd
   popd
 
-  if [ ! -r /usr/local/lib/libgrpc++.so.1.27.2 ] ; then
+  if [ ! -r /usr/local/lib/libgrpc++.so.1.44.0 ] ; then
     echo "installation failed"
     exit 1
   fi

@@ -62,12 +62,12 @@ The unit tests will not be compiled (gmock will not be even downloaded).
 
 Compiling the software requires the following:
 
-- recent C++ compiler, tested with clang-10 and cc-7
-- [CMake](https://cmake.org/) >= 3.2
+- recent C++ compiler, tested with clang-15
+- [CMake](https://cmake.org/) >= 3.18
 - [glog](https://github.com/google/glog), tested with 0.3.5
 - [Boost](https://www.boost.org/), tested with 1.65
-- [gRPC](https://grpc.io/), tested with 1.27.1
-- [protobuf](https://developers.google.com/protocol-buffers/), tested with version shipped with gRPC 1.27.1
+- [gRPC](https://grpc.io/), tested with 1.44.0
+- [protobuf](https://developers.google.com/protocol-buffers/), tested with 3.19.2
 
 With Mac OS X this should be as simple as installing everything via [Homebrew](https://brew.sh/):
 
@@ -75,7 +75,7 @@ With Mac OS X this should be as simple as installing everything via [Homebrew](h
 brew install grpc protobuf cpprestsdk boost glog
 ```
 
-On Linux this is a bit more complicated. A script that downloads and installs all dependencies can be found in the repo, which assumes that you are using `Ubuntu 18.04 (Bionic)`. Note that the script requires root privileges, it will change the system default CMake version to 3.16.1, and it will install headers and libraries in the system path `/usr/local`. To run it just hit (from within the cloned `etsimec` repository):
+On Linux this is a bit more complicated. A script that downloads and installs all dependencies can be found in the repo, which assumes that you are using `Ubuntu 18.04 (Bionic)`. Note that the script requires root privileges, it will change the system default CMake version and it will install headers and libraries in the system path `/usr/local`. To run it just hit (from within the cloned `etsimec` repository):
 
 ```
 [sudo] utils/build_deps.sh
