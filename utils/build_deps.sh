@@ -6,8 +6,8 @@ fi
 
 distro=$(lsb_release -sc 2> /dev/null)
 
-if [ "$distro" != "bionic" ] ; then
-  echo "Error: script only tested on Ubuntu 18.04 (Bionic)"
+if [[ "$distro" != "bionic" && "$distro" != "focal" ]] ; then
+  echo "Error: script only tested on Ubuntu 18.04 (Bionic) and 20.04 (Focal)"
   exit 1
 fi
 
@@ -74,7 +74,14 @@ if [ -r /usr/local/lib/libcpprest.so.2.10 ] ; then
 else
   git clone https://github.com/Microsoft/cpprestsdk.git
   pushd cpprestsdk
-  git checkout v2.10.14
+  if [ "$distro" == "bionic" ] ; then
+    git checkout v2.10.14
+  elif [ "$distro" == "focal" ] ; then
+    git checkout v2.10.18
+  else
+    echo "Invalid distro: $distro"
+    exit -1
+  fi
   git submodule update --init --recursive
   mkdir build
   pushd build
