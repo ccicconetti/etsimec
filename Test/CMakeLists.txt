@@ -29,27 +29,32 @@ endif()
 
 include_directories(${CMAKE_BINARY_DIR}/googletest-src/googletest/include)
 
-add_library(testetsimeclib SHARED
-  ${CMAKE_CURRENT_SOURCE_DIR}/testetsimec.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/testinvoker.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/testgrpcueapplcmproxy.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/testlister.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/teststaticueapplcmproxy.cpp
-)
+include(GoogleTest)
 
-target_link_libraries(testetsimeclib
+set(LIBS
   uiiitetsimec
   uiiitopenwhisk
   uiiitrest
-
   gtest
   ${Boost_LIBRARIES}
 )
 
-add_executable(testetsimec
-  ${CMAKE_CURRENT_SOURCE_DIR}/testmain.cpp
-)
+add_executable(testetsimec testmain.cpp testetsimec.cpp)
+target_link_libraries(testetsimec ${LIBS})
+gtest_discover_tests(testetsimec)
 
-target_link_libraries(testetsimec
-  testetsimeclib
-)
+add_executable(testinvoker testmain.cpp testinvoker.cpp)
+target_link_libraries(testinvoker ${LIBS})
+gtest_discover_tests(testinvoker)
+
+add_executable(testgrpcueapplcmproxy testmain.cpp testgrpcueapplcmproxy.cpp)
+target_link_libraries(testgrpcueapplcmproxy ${LIBS})
+gtest_discover_tests(testgrpcueapplcmproxy)
+
+add_executable(testlister testmain.cpp testlister.cpp)
+target_link_libraries(testlister ${LIBS})
+gtest_discover_tests(testlister)
+
+add_executable(teststaticueapplcmproxy testmain.cpp teststaticueapplcmproxy.cpp)
+target_link_libraries(teststaticueapplcmproxy ${LIBS})
+gtest_discover_tests(teststaticueapplcmproxy)

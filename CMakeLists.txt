@@ -3,10 +3,11 @@ cmake_policy(SET CMP0048 NEW)
 project(mmbots VERSION 1.0.0)
 cmake_minimum_required(VERSION 3.2)
 
-set (CMAKE_CXX_STANDARD 14) # c++14
+set (CMAKE_CXX_STANDARD 17)
 
 # Cmake find modules
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/rest/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/rest/support/cmake")
 
 if(APPLE)
   set(OPENSSL_LIBRARIES /usr/local/opt/openssl/lib/libssl.dylib /usr/local/opt/openssl/lib/libcrypto.dylib)
@@ -63,6 +64,7 @@ add_subdirectory(OpenWhisk)
 
 # unit tests
 if (${CMAKE_BUILD_TYPE} STREQUAL "debug")
+  enable_testing()
   add_subdirectory(Test)
   set(skip_google_test TRUE)
   add_subdirectory(rest/Test)

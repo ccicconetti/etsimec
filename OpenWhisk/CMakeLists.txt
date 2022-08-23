@@ -1,4 +1,4 @@
-add_library(uiiitopenwhisk SHARED
+add_library(uiiitopenwhisk STATIC
   ${CMAKE_CURRENT_SOURCE_DIR}/action.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/command.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/invoker.cpp
