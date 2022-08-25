@@ -64,6 +64,7 @@ add_subdirectory(OpenWhisk)
 
 # unit tests
 if (${CMAKE_BUILD_TYPE} STREQUAL "debug")
+  set(WITH_TEST_RPC ON)
   enable_testing()
   add_subdirectory(Test)
   set(skip_google_test TRUE)
