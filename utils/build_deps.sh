@@ -24,7 +24,7 @@ apt install -y \
 echo "**********************************************************************"
 echo "INSTALLING CMAKE"
 
-if [ "$(cmake --version | head -n 1)" == "cmake version 3.22.2" ] ; then
+if [[ "$(which cmake)" != "" && "$(cmake --version | head -n 1)" == "cmake version 3.22.2" ]] ; then
   echo "it seems it is already installed, skipping"
 else
   wget -q -O cmake-linux.sh https://github.com/Kitware/CMake/releases/download/v3.22.2/cmake-3.22.2-linux-x86_64.sh
