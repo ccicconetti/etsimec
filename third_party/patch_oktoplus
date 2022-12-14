@@ -1,0 +1,22 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 201b7b8..0a5700d 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -21,7 +21,7 @@ include_directories(SYSTEM ${Oktoplus_SOURCE_DIR}/externals/abseil-cpp)
+ # Boost libraries
+ set(Boost_USE_STATIC_LIBS FALSE)
+ set(Boost_MULTITHREADED TRUE)
+-find_package(Boost 1.68.0 REQUIRED COMPONENTS regex date_time filesystem program_options system thread chrono)
++find_package(Boost REQUIRED COMPONENTS regex date_time filesystem program_options system thread chrono)
+ message("***** Boost Libraries *****")
+ message("${Boost_LIBRARIES}")
+ message("***************************")
+@@ -44,7 +44,7 @@ endif()
+ # c++20
+ set (CMAKE_CXX_STANDARD 20)
+ 
+-set(PRJ_COMMONS "-Wall -Wextra -Wpedantic -Werror -pthread -fPIC -fno-strict-aliasing ${CLANG_SPECIFIC_WARNINGS} -Wcast-qual")
++set(PRJ_COMMONS "-Wall -Wextra -Wpedantic -Werror -pthread -fPIC -fno-strict-aliasing ${CLANG_SPECIFIC_WARNINGS} -Wcast-qual -Wno-thread-safety-analysis -Wno-thread-safety-attributes")
+ 
+ #enable thread safety analysis
+ add_compile_definitions(BOOST_THREAD_ENABLE_THREAD_SAFETY_ANALYSIS)
