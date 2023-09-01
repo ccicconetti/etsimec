@@ -1,1 +1,3 @@
 .clang
+utils/cpprestsdk/
+utils/grpc/
